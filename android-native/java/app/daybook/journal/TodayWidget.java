@@ -27,7 +27,7 @@ import org.json.JSONObject;
  * Home-screen widget: today's date, whether you have written today, your streak,
  * and this month as a grid of dots (bright = written, dim = missed, ring = today).
  * It is resizable: the amount of information adapts to the size the user drags it to
- * (tiny = date only, small = date + status, wide/tall = adds streak and the month grid).
+ * (date only, + weekday, + status, + streak, + month grid as it gets bigger).
  * The app keeps the list of written days in its local storage; the widget only reads it.
  */
 public class TodayWidget extends AppWidgetProvider {
@@ -69,6 +69,7 @@ public class TodayWidget extends AppWidgetProvider {
 
         String weekday = new SimpleDateFormat("EEEE", Locale.ENGLISH).format(now.getTime()).toUpperCase(Locale.ENGLISH);
         String date = new SimpleDateFormat("d MMMM", Locale.ENGLISH).format(now.getTime());
+        String shortDate = new SimpleDateFormat("d MMM", Locale.ENGLISH).format(now.getTime());
         String status = today ? "Written today" : "Nothing yet today";
         String detail = streak > 1 ? streak + "-day streak" : (today ? "A good start" : "Tap to write");
 
@@ -80,21 +81,24 @@ public class TodayWidget extends AppWidgetProvider {
             Bundle o = manager.getAppWidgetOptions(id);
             int w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 250);
             int h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 110);
-            boolean showGrid = w >= 230 && h >= 130;
-            boolean showStatus = h >= 70 && w >= 130;
-            boolean showDetail = h >= 95 && w >= 150;
-            boolean tiny = w < 150 || h < 70;
+            // Tiers, smallest first: each step up in size adds one more thing.
+            boolean micro = w < 110 || h < 55;                 // short date only
+            boolean tiny = !micro && (w < 150 || h < 70);      // + weekday
+            boolean showStatus = !micro && !tiny;              // + written / not yet
+            boolean showDetail = showStatus && h >= 100 && w >= 160;  // + streak line
+            boolean showGrid = w >= 230 && h >= 135;           // + month grid
             RemoteViews v = new RemoteViews(context.getPackageName(), R.layout.widget_today);
             v.setTextViewText(R.id.w_weekday, weekday);
-            v.setTextViewText(R.id.w_date, date);
+            v.setTextViewText(R.id.w_date, micro ? shortDate : date);
             v.setTextViewText(R.id.w_status, status);
             v.setTextViewText(R.id.w_detail, detail);
             v.setTextColor(R.id.w_status, today ? INK : SOFT);
-            v.setTextViewTextSize(R.id.w_date, TypedValue.COMPLEX_UNIT_SP, tiny ? 18 : (showGrid ? 26 : 24));
+            v.setTextViewTextSize(R.id.w_date, TypedValue.COMPLEX_UNIT_SP, micro ? 16 : tiny ? 19 : (showGrid ? 26 : 24));
+            v.setViewVisibility(R.id.w_weekday, micro ? View.GONE : View.VISIBLE);
             v.setViewVisibility(R.id.w_status, showStatus ? View.VISIBLE : View.GONE);
             v.setViewVisibility(R.id.w_detail, showDetail ? View.VISIBLE : View.GONE);
             v.setViewVisibility(R.id.w_grid, showGrid ? View.VISIBLE : View.GONE);
-            int pad = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, tiny ? 12 : 18,
+            int pad = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, micro ? 8 : tiny ? 12 : 18,
                     context.getResources().getDisplayMetrics()));
             v.setViewPadding(android.R.id.background, pad, pad, pad, pad);
             if (showGrid) v.setImageViewBitmap(R.id.w_grid, grid);
