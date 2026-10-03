@@ -11,6 +11,9 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.os.Bundle;
+import android.util.TypedValue;
+import android.view.View;
 import android.widget.RemoteViews;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -23,6 +26,8 @@ import org.json.JSONObject;
 /**
  * Home-screen widget: today's date, whether you have written today, your streak,
  * and this month as a grid of dots (bright = written, dim = missed, ring = today).
+ * It is resizable: the amount of information adapts to the size the user drags it to
+ * (tiny = date only, small = date + status, wide/tall = adds streak and the month grid).
  * The app keeps the list of written days in its local storage; the widget only reads it.
  */
 public class TodayWidget extends AppWidgetProvider {
@@ -72,16 +77,35 @@ public class TodayWidget extends AppWidgetProvider {
         PendingIntent tap = open == null ? null : PendingIntent.getActivity(context, 0, open,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         for (int id : ids) {
+            Bundle o = manager.getAppWidgetOptions(id);
+            int w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 250);
+            int h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 110);
+            boolean showGrid = w >= 230 && h >= 130;
+            boolean showStatus = h >= 70 && w >= 130;
+            boolean showDetail = h >= 95 && w >= 150;
+            boolean tiny = w < 150 || h < 70;
             RemoteViews v = new RemoteViews(context.getPackageName(), R.layout.widget_today);
             v.setTextViewText(R.id.w_weekday, weekday);
             v.setTextViewText(R.id.w_date, date);
             v.setTextViewText(R.id.w_status, status);
             v.setTextViewText(R.id.w_detail, detail);
             v.setTextColor(R.id.w_status, today ? INK : SOFT);
-            v.setImageViewBitmap(R.id.w_grid, grid);
+            v.setTextViewTextSize(R.id.w_date, TypedValue.COMPLEX_UNIT_SP, tiny ? 18 : (showGrid ? 26 : 24));
+            v.setViewVisibility(R.id.w_status, showStatus ? View.VISIBLE : View.GONE);
+            v.setViewVisibility(R.id.w_detail, showDetail ? View.VISIBLE : View.GONE);
+            v.setViewVisibility(R.id.w_grid, showGrid ? View.VISIBLE : View.GONE);
+            int pad = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, tiny ? 12 : 18,
+                    context.getResources().getDisplayMetrics()));
+            v.setViewPadding(android.R.id.background, pad, pad, pad, pad);
+            if (showGrid) v.setImageViewBitmap(R.id.w_grid, grid);
             if (tap != null) v.setOnClickPendingIntent(android.R.id.background, tap);
             manager.updateAppWidget(id, v);
         }
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager manager, int id, Bundle options) {
+        onUpdate(context, manager, new int[] { id });
     }
 
     private static Bitmap drawMonth(Calendar now, Set<String> days) {
