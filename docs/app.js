@@ -541,7 +541,20 @@ async function renderExport() {
   $('#rangeInfo').textContent = n < 0 ? 'The count needs a connection.' : n + (n === 1 ? ' entry' : ' entries') + ' in this range';
   ['#expPrint', '#expTxt'].forEach((s) => { $(s).disabled = n === 0; });
 }
+// Saving a file. In the Android app the file is written to the phone and the share menu opens,
+// so it can go to Files, Drive, a printer or a chat. On the web it downloads as usual.
+const nativeBridge = () => { const C = window.Capacitor; return C && typeof C.isNativePlatform === 'function' && C.isNativePlatform() && typeof C.nativePromise === 'function' ? C : null; };
+async function saveFile(name, data, mime) {
+  const C = nativeBridge();
+  if (!C) { download(name, data, mime); return 'downloaded'; }
+  const isB64 = typeof data === 'object' && data.base64;
+  const w = await C.nativePromise('Filesystem', 'writeFile', isB64 ? { path: name, data: data.base64, directory: 'CACHE' } : { path: name, data: String(data), directory: 'CACHE', encoding: 'utf8' });
+  try { await C.nativePromise('Share', 'share', { title: name, url: w.uri, dialogTitle: 'Save or share ' + name }); }
+  catch (e) { if (!/cancel/i.test(String(e && (e.message || e.code) || ''))) throw e; }
+  return 'shared';
+}
 function download(name, data, mime) {
+  if (typeof data === 'object' && data.base64) { const b = atob(data.base64), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); data = u; }
   const url = URL.createObjectURL(new Blob([data], { type: mime }));
   const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 30000);
@@ -555,52 +568,9 @@ function slug() {
   if (v === 'all') return 'everything';
   const b = rangeBounds(); return (b[0] > '0001' ? b[0] : 'start') + '-to-' + (b[1] < '9998' ? b[1] : 'now');
 }
-function groupMonths(list) {
-  const g = [];
-  list.forEach((e) => {
-    const ym = e.date.slice(0, 7); let last = g[g.length - 1];
-    if (!last || last.ym !== ym) { last = { ym, label: MONTHS[Number(ym.slice(5)) - 1] + ' ' + ym.slice(0, 4), items: [] }; g.push(last); }
-    last.items.push(e);
-  });
-  return g;
-}
-const exportedOn = () => longDate(todayKey()) + ', ' + timeNow();
-function bookHtml(list, label) {
-  // Screen: a plain readable page. Print: A4 landscape, two A5 pages per sheet, one day per A5 page.
-  const css = '*{box-sizing:border-box}html,body{margin:0}body{font-family:Georgia,"Times New Roman",serif;color:#141414;background:#fff;line-height:1.65}' +
-    '.bar{max-width:680px;margin:20px auto;padding:10px 14px;border:1px solid #ccc;border-radius:12px;font:14px system-ui,sans-serif;display:flex;gap:12px;align-items:center;justify-content:space-between}' +
-    '.bar button{font:inherit;padding:6px 14px;border:1px solid #141414;border-radius:8px;background:#141414;color:#fff;cursor:pointer}' +
-    '.cover h1{font:500 30pt Georgia,serif;letter-spacing:.14em;text-transform:uppercase;margin:0 0 14px}.cover p{margin:4px 0;color:#555}.cover .rng{font-size:13pt;color:#141414}' +
-    '.toc h2{font:600 8.5pt system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#555;margin:0 0 8px}.toc div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px dotted #bbb;padding:3px 0;font:10pt system-ui,sans-serif}' +
-    '.entry h2{font:600 15pt Georgia,serif;margin:0;line-height:1.25}' +
-    '.meta{font:8.5pt system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#666;margin:3px 0 10px}' +
-    '.entry h3{font:italic 400 13pt Georgia,serif;margin:6px 0 8px}.text{white-space:pre-wrap;overflow-wrap:anywhere}' +
-    '@media screen{.wrap{max-width:680px;margin:0 auto;padding:0 24px 60px}.cover{text-align:center;padding:70px 0 40px;border-bottom:1px solid #ccc}.toc{max-width:360px;margin:36px auto 0;text-align:left}.entry{padding:26px 0;border-bottom:1px solid #ddd}}' +
-    '@page{size:A4 landscape;margin:14mm 0}' +
-    '@media print{.bar{display:none}.wrap{width:297mm;column-count:2;column-gap:0;column-fill:auto;font-size:11pt}' +
-    '.cover,.toc,.entry{padding:0 14mm;break-before:column;break-inside:auto}.cover{break-before:auto;text-align:left}.cover .rng{margin-top:14mm}.entry h2,.meta{break-after:avoid}}';
-  const total = list.reduce((a, e) => a + words(e.body), 0), groups = groupMonths(list);
-  const toc = groups.map((g) => '<div><span>' + esc(g.label) + '</span><span>' + g.items.length + (g.items.length === 1 ? ' entry' : ' entries') + '</span></div>').join('');
-  const body = list.map((e) => {
-    const w = words(e.body), ph = (e.photos || []).length;
-    return '<section class="entry"><h2>' + esc(longDate(e.date)) + '</h2><div class="meta">' + w + (w === 1 ? ' word' : ' words') + (ph ? ' · ' + ph + (ph === 1 ? ' photo kept in the app' : ' photos kept in the app') : '') + '</div>' + (e.title ? '<h3>' + esc(e.title) + '</h3>' : '') + '<div class="text">' + esc(e.body || '') + '</div></section>';
-  }).join('');
-  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Daybook, ' + esc(label) + '</title><style>' + css + '</style></head><body>' +
-    '<div class="bar"><span>Prints on A4 landscape: two days per sheet, one day per A5 page. Choose Save as PDF to keep a copy.</span><button onclick="window.print()">Print</button></div>' +
-    '<div class="wrap"><div class="cover"><h1>Daybook</h1><p class="rng">' + esc(label) + '</p><p>' + list.length + (list.length === 1 ? ' entry' : ' entries') + ', ' + fmt(total) + ' words</p><p>Exported ' + esc(exportedOn()) + '</p></div>' +
-    '<div class="toc"><h2>Contents</h2>' + toc + '</div>' + body + '</div></body></html>';
-}
 function plainText(list) {
   // Just the writing: each entry is its date, an optional title, then the text.
   return list.map((e) => longDate(e.date) + '\n' + (e.title ? e.title + '\n' : '') + '\n' + (e.body || '').trim() + '\n').join('\n\n') ;
-}
-function printHtml(html) {
-  const f = document.createElement('iframe');
-  f.setAttribute('aria-hidden', 'true');
-  f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
-  document.body.appendChild(f);
-  f.onload = () => setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { setMsg('Could not open printing here. Use Book file and print that.'); } setTimeout(() => f.remove(), 120000); }, 300);
-  f.srcdoc = html;
 }
 async function runExport(kind) {
   setMsg('Preparing…');
@@ -609,10 +579,19 @@ async function runExport(kind) {
     if (!list.length) { setMsg('Nothing to export in that range.'); return; }
     const label = rangeLabel(list);
     if (!navigator.onLine) setMsg('Offline: this only includes entries stored on this device.');
-    if (kind === 'print') { printHtml(bookHtml(list, label)); }
-    else if (kind === 'book') { download('daybook-' + slug() + '.html', bookHtml(list, label), 'text/html'); setMsg('Saved daybook-' + slug() + '.html'); }
-    else { download('daybook-' + slug() + '.txt', plainText(list), 'text/plain'); setMsg('Saved daybook-' + slug() + '.txt'); }
-  } catch (e) { setMsg('Could not load those entries. Check your connection.'); }
+    const base = 'daybook-' + slug();
+    if (kind === 'print') {
+      setMsg('Making your PDF…');
+      const { makeJournalPdf } = await import('./pdf.js');
+      const doc = await makeJournalPdf(list, { label, photo: photoData, onProgress: (i, n) => setMsg('Laying out day ' + i + ' of ' + n + '…') });
+      const b64 = doc.output('datauristring').split(',')[1];
+      const how = await saveFile(base + '.pdf', { base64: b64 }, 'application/pdf');
+      setMsg(how === 'shared' ? 'Your PDF is ready.' : 'Saved ' + base + '.pdf. Open it to print: A4, landscape.');
+    } else {
+      const how = await saveFile(base + '.txt', plainText(list), 'text/plain');
+      setMsg(how === 'shared' ? 'Your text file is ready.' : 'Saved ' + base + '.txt');
+    }
+  } catch (e) { setMsg(/pdf library|fetch/i.test(String(e && e.message)) ? 'Could not load the PDF maker. Check your connection and try again.' : 'Could not make that file. ' + String(e && (e.message || e) || '').slice(0, 80)); }
 }
 async function runBackup() {
   if (!navigator.onLine) { setMsg('Connect to the internet to make a full backup.'); return; }
@@ -623,7 +602,7 @@ async function runBackup() {
     const ids = [...new Set(list.flatMap((e) => e.photos || []))], pics = {};
     for (let i = 0; i < ids.length; i++) { setMsg('Collecting photos ' + (i + 1) + ' of ' + ids.length + '…'); const d = await photoData(ids[i]); if (d) pics[ids[i]] = d; }
     const name = 'daybook-backup-' + todayKey() + '.json';
-    download(name, JSON.stringify({ app: 'daybook', version: 2, exported: new Date().toISOString(), entries: list, photos: pics }), 'application/json');
+    await saveFile(name, JSON.stringify({ app: 'daybook', version: 2, exported: new Date().toISOString(), entries: list, photos: pics }), 'application/json');
     setMsg('Saved ' + name + ' with ' + list.length + ' entries and ' + ids.length + ' photos.');
   } catch (e) { setMsg('Could not make the backup. Check your connection.'); }
 }
