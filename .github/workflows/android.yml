@@ -23,7 +23,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Install Capacitor
-        run: npm install --no-audit --no-fund @capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor-firebase/authentication@8 firebase@12 @capacitor/filesystem@8 @capacitor/share@8 @capacitor/local-notifications@8 @capacitor/app@8 @capacitor/haptics@8
+        run: npm install --no-audit --no-fund @capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor-firebase/authentication@8 firebase@12 @capacitor/filesystem@8 @capacitor/share@8 @capacitor/local-notifications@8 @capacitor/app@8 @capacitor/haptics@8 @capacitor/preferences@8
       - name: Configure the app
         run: |
           cat > capacitor.config.json <<JSON

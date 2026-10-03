@@ -33,3 +33,9 @@ export async function setReminder(on, time) {
   }
   try { localStorage.setItem(KEY, JSON.stringify({ on, time })); } catch (e) {}
 }
+
+// Data for the home-screen widget: the dates you have written on (about the last 400 days).
+export function setWidgetDays(days) {
+  return call('Preferences', 'set', { key: 'daybook.widget', value: JSON.stringify({ days, updated: Date.now() }) }).catch(() => {});
+}
+export function clearWidget() { return call('Preferences', 'remove', { key: 'daybook.widget' }).catch(() => {}); }

@@ -1,6 +1,6 @@
 import { config } from './config.js';
 import { correct, fixError } from './grammar.js';
-import { isNative, haptic, onBack, reminderPrefs, setReminder } from './native.js';
+import { isNative, haptic, onBack, reminderPrefs, setReminder, setWidgetDays, clearWidget } from './native.js';
 
 const $ = (s) => document.querySelector(s);
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -77,6 +77,7 @@ async function onAuth(user) {
   if (lockData && lockData.hash && hasCrypto) showLock(); else start();
 }
 function teardown() {
+  if (widgetDays) { widgetDays = null; clearWidget(); }
   if (unwatch) { try { unwatch(); } catch (e) {} unwatch = null; }
   clearTimeout(timer); clearTimeout(fixTimer);
   entries = {}; monthsLoaded = new Set(); photoCache = {}; photos = [];
@@ -158,7 +159,25 @@ function start() {
     else afterEntriesChanged();
   }, () => goOffline('Lost the connection to your journal. Check your internet and reload.'));
 }
+// Home-screen widget (Android): keep its list of written days current.
+let widgetDays = null;
+async function loadWidgetDays() {
+  if (!isNative() || widgetDays) return;
+  try {
+    const d = new Date(); d.setDate(d.getDate() - 400);
+    const rows = await store.getRange(keyOf(d), todayKey());
+    widgetDays = new Set(rows.filter(hasContent).map((e) => e.date));
+    setWidgetDays([...widgetDays].sort());
+  } catch (e) { /* the widget can wait */ }
+}
+function noteWidget(date, has) {
+  if (!widgetDays) return;
+  const before = widgetDays.has(date);
+  if (has) widgetDays.add(date); else widgetDays.delete(date);
+  if (before !== has) setWidgetDays([...widgetDays].sort());
+}
 async function refreshMeta() {
+  setTimeout(loadWidgetDays, 2500);
   try {
     totalCount = await store.count();
     firstDate = await store.firstDate();
@@ -374,6 +393,7 @@ async function persist(e) {
   pending++;
   if (cur === e.date) setStatus(navigator.onLine ? 'Saving…' : 'Kept here, uploads when online');
   renderCal(); renderCount(); renderExport();
+  noteWidget(e.date, hasContent(data));
   store.setEntry(e.date, data).then(() => {
     pending--;
     if (!pending && !dirty && cur === e.date) setStatus('saved');
