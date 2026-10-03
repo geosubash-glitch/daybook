@@ -13,7 +13,7 @@ Do the steps in order. It takes about 30 minutes, once.
 3. In the left menu open **Build, then Authentication**. Press **Get started**, choose **Email/Password**, switch it on, Save.
 4. Still in Authentication, open the **Users** tab, press **Add user**, and type your email and a strong password.
    This is how you sign in to Daybook. Write the password down somewhere safe.
-5. Open Authentication, **Settings**, **User actions**, and **untick "Enable create (sign-up)"**. Save.
+5. Open Authentication, **Sign-in method**, and also switch on **Google** (pick your email as the support email). Then **Settings**, **User actions**, and keep **Enable create (sign-up)** ticked so other people can join with Google. To make Daybook just yours instead, untick it.
    Now nobody else can make an account.
 6. Open **Build, then Firestore Database**. Press **Create database**, choose **Production mode**, and pick the
    location nearest to you (for India, `asia-south1` Mumbai). You cannot change the location later.
