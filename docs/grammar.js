@@ -29,6 +29,21 @@ async function check(text) {
   return (await r.json()).matches || [];
 }
 
+// For spelling mistakes, pick the suggestion closest to what was typed (ties go to the longer word,
+// so "realy" becomes "really", not "real").
+function dist(a, b) {
+  const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= n; j++) d[0][j] = j;
+  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  return d[m][n];
+}
+function pick(orig, m) {
+  const reps = m.replacements.slice(0, 4).map((r) => r.value);
+  if (!(m.rule && m.rule.category && m.rule.category.id === 'TYPOS')) return reps[0];
+  const o = orig.toLowerCase();
+  return reps.map((v, i) => ({ v, i, d: dist(o, v.toLowerCase()) })).sort((a, b) => a.d - b.d || b.v.length - a.v.length || a.i - b.i)[0].v;
+}
+
 function apply(text, matches) {
   let out = text;
   const ok = matches.filter((m) => {
@@ -43,7 +58,7 @@ function apply(text, matches) {
   let lastStart = Infinity;
   for (const m of ok) {
     if (m.offset + m.length > lastStart) continue; // skip overlapping fixes
-    out = out.slice(0, m.offset) + m.replacements[0].value + out.slice(m.offset + m.length);
+    out = out.slice(0, m.offset) + pick(text.substr(m.offset, m.length), m) + out.slice(m.offset + m.length);
     lastStart = m.offset;
   }
   return out;
