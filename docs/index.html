@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daybook</title>
+<meta name="theme-color" content="#FBFBFA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F0F10" media="(prefers-color-scheme: dark)">
+<meta name="color-scheme" content="light dark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Instrument+Sans:wght@400..600&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap">
+<style>
+/* Layout: one centred manuscript column on an 8pt grid.
+   Corners are concentric: a control is 12px, and anything that holds controls
+   is 12px plus its padding (group 4px -> 16px radius, panel 16px -> 28px radius). */
+:root {
+  --bg: #FBFBFA;
+  --ink: #141414;
+  --ink-2: #6E6E6A;
+  --rule: #E2E2DE;
+  --ink-on: #FBFBFA;
+  --danger: #9E2A22;
+  --r: 12px;
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  --f-display: "Cormorant Garamond", "Times New Roman", serif;
+  --f-write: "Newsreader", Georgia, "Times New Roman", serif;
+  --f-ui: "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F0F10; --ink: #ECECE8; --ink-2: #94948F; --rule: #2A2A2D; --ink-on: #0F0F10; --danger: #FF8A80;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F0F10; --ink: #ECECE8; --ink-2: #94948F; --rule: #2A2A2D; --ink-on: #0F0F10; --danger: #FF8A80;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5; padding-inline: max(var(--s5), env(safe-area-inset-left)) max(var(--s5), env(safe-area-inset-right)); padding-block: max(var(--s4), env(safe-area-inset-top)) max(var(--s7), env(safe-area-inset-bottom)); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.col { max-width: 42rem; margin-inline: auto; }
+.ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+/* icon buttons: 44px target, 12px corner. A group adds 4px padding, so its corner is 16px. */
+.ibtn { width: 44px; height: 44px; border: 0; background: transparent; border-radius: var(--r); display: grid; place-items: center; padding: 0; color: var(--ink); }
+.ibtn:hover:not(:disabled) { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+.ibtn:disabled { opacity: .3; cursor: default; }
+.ibtn[aria-expanded="true"], .ibtn[aria-pressed="true"] { background: var(--ink); color: var(--ink-on); }
+.ibtn.danger:hover:not(:disabled) { color: var(--danger); }
+.ibtn.armed { background: var(--danger); color: #fff; }
+.group { display: inline-flex; gap: var(--s1); padding: var(--s1); border: 1px solid var(--rule); border-radius: calc(var(--r) + var(--s1)); flex-shrink: 0; }
+
+.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
+.brand { font-family: var(--f-display); font-weight: 600; font-size: 1.35rem; letter-spacing: .14em; text-transform: uppercase; }
+.banner { border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3) var(--s4); margin-top: var(--s4); font-size: .9rem; }
+
+.link { background: none; border: none; padding: 0; color: var(--ink); font-family: var(--f-ui); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid transparent; }
+.link:hover { border-bottom-color: var(--ink); }
+.btn { border: 1px solid var(--ink); background: transparent; border-radius: var(--r); padding: 0 var(--s4); height: 44px; font-family: var(--f-ui); font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; }
+.btn:hover:not(:disabled) { background: var(--ink); color: var(--ink-on); }
+.btn:disabled { opacity: .35; cursor: default; }
+.btn.primary { background: var(--ink); color: var(--ink-on); }
+.btn.primary:hover:not(:disabled) { opacity: .85; }
+select, input[type="date"], input[type="search"], input[type="password"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3); height: 44px; max-width: 100%; }
+.row { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
+
+/* date + navigation */
+.dateblock { padding-block: var(--s6) var(--s4); display: flex; justify-content: space-between; align-items: flex-end; gap: var(--s4); }
+.wk { font-size: .78rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink-2); }
+.date { font-family: var(--f-display); font-weight: 500; font-size: 3rem; line-height: 1.2; letter-spacing: -.01em; font-variant-numeric: lining-nums; margin: var(--s2) 0 var(--s2); }
+.meta { font-size: .8rem; color: var(--ink-2); font-variant-numeric: tabular-nums; display: flex; gap: var(--s3); flex-wrap: wrap; align-items: baseline; }
+.meta .link { color: var(--ink); }
+@media (max-width: 520px) {
+  .date { font-size: 2.3rem; }
+  .dateblock { flex-direction: column; align-items: flex-start; padding-top: var(--s5); }
+}
+
+/* writing */
+.write { border-top: 1px solid var(--rule); padding-top: var(--s5); }
+#title { display: block; width: 100%; border: none; background: transparent; padding: 0; font-family: var(--f-write); font-style: italic; font-size: 1.5rem; line-height: 1.3; margin-bottom: var(--s4); }
+#body { display: block; width: 100%; border: none; background: transparent; padding: 0; font-family: var(--f-write); font-size: 1.2rem; line-height: 1.8; min-height: 320px; resize: none; overflow: hidden; caret-color: var(--ink); }
+#title::placeholder, #body::placeholder { color: var(--ink-2); opacity: .65; }
+#title:focus-visible, #body:focus-visible { outline: none; }
+.photos { display: flex; gap: var(--s3); flex-wrap: wrap; padding-top: var(--s4); }
+.photo { position: relative; }
+.photo img { display: block; height: 96px; width: auto; max-width: 100%; border: 1px solid var(--rule); border-radius: var(--r); }
+.photo button { position: absolute; top: -10px; right: -10px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--rule); background: var(--bg); padding: 0; display: grid; place-items: center; }
+.photo button .ic { width: 14px; height: 14px; }
+
+.foot { margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--rule); display: flex; align-items: center; gap: var(--s3) var(--s4); flex-wrap: wrap; }
+.foot .info { display: flex; align-items: center; gap: var(--s3); font-size: .8rem; color: var(--ink-2); min-width: 0; flex-wrap: wrap; }
+.foot .info .ic { width: 16px; height: 16px; }
+.foot .end { margin-left: auto; margin-right: calc(var(--s3) * -1); }
+.foot #del[hidden] { display: none; }
+
+/* panels: 16px padding around 12px controls gives a 28px corner */
+.panel { border: 1px solid var(--rule); padding: var(--s4); border-radius: calc(var(--r) + var(--s4)); display: grid; gap: var(--s3); }
+.panel h2, .panel h3 { margin: 0; font-family: var(--f-display); font-size: 1.3rem; font-weight: 600; }
+.scan { margin-bottom: var(--s5); }
+.scan textarea { width: 100%; min-height: 160px; border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3); background: transparent; font-family: var(--f-write); font-size: 1.05rem; line-height: 1.6; resize: vertical; }
+.scan label.keep { display: flex; gap: var(--s2); align-items: center; font-size: .9rem; }
+.lockpanel { margin-top: var(--s4); max-width: 30rem; }
+.lockpanel input { flex: 1 1 160px; min-width: 0; }
+.fine { font-size: .8rem; color: var(--ink-2); margin: 0; }
+.msg { font-size: .85rem; min-height: 1.2em; margin: 0; }
+
+/* browse drawer */
+.browse { margin-top: var(--s5); padding-top: var(--s5); border-top: 1px solid var(--rule); display: grid; gap: var(--s6); }
+@media (min-width: 760px) { .browse { grid-template-columns: 1fr 1fr; } .browse .wide { grid-column: 1 / -1; } }
+.browse h2 { margin: 0 0 var(--s3); font-family: var(--f-display); font-weight: 600; font-size: 1.15rem; letter-spacing: .1em; text-transform: uppercase; }
+.calhead { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
+.calhead select { padding: 0 var(--s2); }
+.calhead .sel { display: flex; gap: var(--s2); min-width: 0; }
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--s1); text-align: center; }
+.cal .wd { font-size: .68rem; letter-spacing: .1em; color: var(--ink-2); padding: var(--s2) 0; }
+.cal button { position: relative; border: 1px solid transparent; background: transparent; border-radius: var(--r); aspect-ratio: 1 / 1; max-height: 44px; width: 100%; font-variant-numeric: tabular-nums; font-size: .88rem; padding: 0; }
+.cal button:hover:not(:disabled) { border-color: var(--ink-2); }
+.cal button:disabled { opacity: .3; cursor: default; }
+.cal button.today { text-decoration: underline; text-underline-offset: 4px; }
+.cal button.has::after { content: ""; position: absolute; left: 50%; bottom: 5px; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: var(--ink); }
+.cal button.sel { background: var(--ink); color: var(--ink-on); }
+.cal button.sel.has::after { background: var(--ink-on); }
+.count { font-size: .8rem; color: var(--ink-2); margin: var(--s3) 0 0; font-variant-numeric: tabular-nums; }
+.list { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; }
+.list button { width: 100%; text-align: left; border: none; border-top: 1px solid var(--rule); background: transparent; padding: var(--s3) 0; }
+.list li:last-child button { border-bottom: 1px solid var(--rule); }
+.list button:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.list .d { display: block; font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.list .s { display: block; font-family: var(--f-write); font-size: 1rem; overflow-wrap: anywhere; }
+.empty { font-size: .9rem; color: var(--ink-2); margin: var(--s2) 0 0; font-family: var(--f-write); font-style: italic; }
+input[type="search"] { width: 100%; }
+.export .box { display: grid; gap: var(--s3); max-width: 28rem; margin-top: var(--s4); }
+.export summary { display: inline-block; cursor: pointer; }
+.export select { min-width: 0; }
+
+/* unlock screen: no card, just the content centred */
+.lock { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: var(--s5); overflow-y: auto; }
+.lockcard { width: 100%; max-width: 22rem; display: grid; gap: var(--s4); }
+.lockcard h1 { margin: 0 0 var(--s2); font-family: var(--f-display); font-weight: 600; font-size: 2.1rem; letter-spacing: .14em; text-transform: uppercase; }
+.lockcard p { margin: 0; color: var(--ink-2); font-size: .92rem; }
+.lockcard form { display: grid; gap: var(--s4); }
+.lockcard input { flex: 1 1 160px; min-width: 0; }
+.hint { font-size: .85rem; color: var(--ink-2); }
+.lightbox { position: fixed; inset: 0; z-index: 60; background: color-mix(in srgb, var(--bg) 94%, transparent); display: grid; place-items: center; padding: var(--s5); }
+.lightbox img { max-width: 100%; max-height: 100%; border-radius: var(--r); border: 1px solid var(--rule); }
+.lightbox .ibtn { position: absolute; top: max(var(--s4), env(safe-area-inset-top)); right: var(--s4); }
+.section { display: grid; gap: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--rule); }
+.section:first-of-type { border-top: 0; padding-top: 0; }
+.lockerr { color: var(--danger); min-height: 1.2em; font-size: .88rem; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="10" rx="3"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-scan" viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M7.5 12h9"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5 7h14M10 7V5h4v2M7 7l.8 12h8.4L17 7M10.5 11v5M13.5 11v5"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="M14.5 6l-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="M9.5 6l6 6-6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path d="M12 3.5l1.7 4.8 4.8 1.7-4.8 1.7L12 16.5l-1.7-4.8L5.5 10l4.8-1.7zM18.5 16l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+  <symbol id="i-spell" viewBox="0 0 24 24"><path d="M5 15.5l4-10 4 10M6.6 11.5h5.8M15 17.5l2.2 2.2L21 15"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 6.5L4.5 11 9 15.5M5 11h9.5a4.5 4.5 0 0 1 0 9H11"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></symbol>
+</svg>
+
+<div class="lock" id="setup" hidden>
+  <div class="lockcard">
+    <h1>Daybook</h1>
+    <p>This copy is not connected to a database yet. Open <b>docs/config.js</b>, paste in your Firebase settings as the guide explains, and reload.</p>
+  </div>
+</div>
+
+<div class="lock" id="signin" hidden>
+  <div class="lockcard">
+    <h1>Daybook</h1>
+    <form id="signinForm">
+      <p>Sign in to your journal.</p>
+      <input type="email" id="siEmail" autocomplete="username" placeholder="Email" aria-label="Email">
+      <input type="password" id="siPass" autocomplete="current-password" placeholder="Password" aria-label="Password">
+      <button class="btn primary" type="submit">Sign in</button>
+      <div class="lockerr" id="siErr" aria-live="polite"></div>
+      <button class="link" id="siReset" type="button" style="justify-self:start">Email me a password reset</button>
+    </form>
+  </div>
+</div>
+
+<div class="lock" id="lock" hidden>
+  <div class="lockcard">
+    <h1>Daybook</h1>
+    <form id="lockForm">
+      <p>Enter your passcode.</p>
+      <div class="row">
+        <input type="password" id="lockPin" autocomplete="off" placeholder="Passcode" aria-label="Passcode">
+        <button class="btn primary" type="submit">Open</button>
+      </div>
+      <div class="lockerr" id="lockErr" aria-live="polite"></div>
+      <button class="link" id="forgot" type="button" style="justify-self:start">Forgot your passcode</button>
+    </form>
+    <form id="recForm" hidden>
+      <p>Type your recovery word, then choose a new passcode.</p>
+      <input type="password" id="recWord" autocomplete="off" placeholder="Recovery word" aria-label="Recovery word">
+      <input type="password" id="newPin" autocomplete="off" placeholder="New passcode, 4 or more characters" aria-label="New passcode">
+      <div class="row"><button class="btn primary" type="submit">Reset and open</button><button class="btn" id="recBack" type="button">Back</button></div>
+      <div class="lockerr" id="recErr" aria-live="polite"></div>
+    </form>
+  </div>
+</div>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="ibtn" id="lbClose" type="button" aria-label="Close photo"><svg class="ic"><use href="#i-x"/></svg></button>
+  <img id="lbImg" alt="Photo of a handwritten page">
+</div>
+
+<div class="col" id="shell" hidden>
+  <header class="top">
+    <div class="brand">Daybook</div>
+    <div class="group" role="toolbar" aria-label="Journal tools">
+      <button class="ibtn" id="browseBtn" type="button" aria-label="Browse, search and export" title="Browse" aria-expanded="false"><svg class="ic"><use href="#i-cal"/></svg></button>
+      <button class="ibtn" id="lockBtn" type="button" aria-label="Settings" title="Settings" aria-expanded="false"><svg class="ic"><use href="#i-sliders"/></svg></button>
+    </div>
+  </header>
+  <div class="banner" id="banner" hidden></div>
+
+  <section class="panel lockpanel" id="lockPanel" hidden aria-label="Settings">
+    <div class="section">
+      <h2>Account</h2>
+      <p class="fine" id="acct"></p>
+      <div class="row"><button class="btn" id="signOut" type="button">Sign out</button></div>
+    </div>
+    <div class="section">
+      <h2>Passcode</h2>
+      <div id="lpOff" hidden style="display:grid;gap:12px">
+        <p class="fine">Asks for this passcode when the journal opens, and after you have been away for a couple of minutes. The recovery word lets you reset it. Keep both safe.</p>
+        <input type="password" id="setPin" autocomplete="off" placeholder="Passcode, 4 or more characters" aria-label="New passcode">
+        <input type="password" id="setRec" autocomplete="off" placeholder="Recovery word" aria-label="Recovery word">
+        <div class="row"><button class="btn primary" id="lpOn" type="button">Turn on</button></div>
+      </div>
+      <div id="lpOnBox" hidden style="display:grid;gap:12px">
+        <p class="fine">The passcode is on.</p>
+        <div class="row"><button class="btn" id="lockNow" type="button">Lock now</button></div>
+        <div class="row"><input type="password" id="offPin" autocomplete="off" placeholder="Current passcode" aria-label="Current passcode"><button class="btn" id="lpTurnOff" type="button">Turn off</button></div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Reading and correcting</h2>
+      <p class="fine">Scanning handwriting and fixing grammar use Google Gemini with your own free key. Get one at aistudio.google.com/apikey and paste it here. It stays in your private journal storage.</p>
+      <input type="password" id="aiKey" autocomplete="off" placeholder="Gemini API key" aria-label="Gemini API key">
+      <input type="text" id="aiModel" autocomplete="off" placeholder="Model, for example gemini-2.5-flash" aria-label="Gemini model name" spellcheck="false">
+      <div class="row"><button class="btn primary" id="aiSave" type="button">Save</button><button class="btn" id="aiRemove" type="button">Remove key</button></div>
+    </div>
+    <div class="row"><button class="btn" id="lpClose" type="button">Close</button></div>
+    <p class="msg" id="lpMsg" aria-live="polite"></p>
+  </section>
+
+  <section class="browse" id="browse" hidden aria-label="Browse your journal">
+    <div>
+      <h2>Calendar</h2>
+      <div class="calhead">
+        <div class="sel">
+          <select id="mSel" aria-label="Month"></select>
+          <select id="ySel" aria-label="Year"></select>
+        </div>
+        <div class="group">
+          <button class="ibtn" id="mPrev" type="button" aria-label="Previous month"><svg class="ic"><use href="#i-left"/></svg></button>
+          <button class="ibtn" id="mNext" type="button" aria-label="Next month"><svg class="ic"><use href="#i-right"/></svg></button>
+        </div>
+      </div>
+      <div class="cal" id="cal"></div>
+      <p class="count" id="count"></p>
+    </div>
+    <div>
+      <h2>Search</h2>
+      <input type="search" id="q" placeholder="A word or a title" aria-label="Search entries">
+      <p class="hint" id="qInfo" style="margin:8px 0 0"></p>
+      <ul class="list" id="results"></ul>
+      <h2 style="margin-top:32px">On this day</h2>
+      <ul class="list" id="otd"></ul>
+    </div>
+    <details class="export wide">
+      <summary class="link">Print &amp; export</summary>
+      <div class="box">
+        <select id="range" aria-label="Which entries">
+          <option value="week">Last 7 days</option>
+          <option value="last30">Last 30 days</option>
+          <option value="month"></option>
+          <option value="year"></option>
+          <option value="all">Everything</option>
+          <option value="custom">Choose dates</option>
+        </select>
+        <div class="row" id="customRow" hidden>
+          <input type="date" id="from" aria-label="From date">
+          <input type="date" id="to" aria-label="To date">
+        </div>
+        <p class="fine" id="rangeInfo"></p>
+        <div class="row">
+          <button class="btn primary" id="expPrint" type="button">Print or PDF</button>
+          <button class="btn" id="expBook" type="button">Book file</button>
+          <button class="btn" id="expTxt" type="button">Plain text</button>
+        </div>
+        <p class="fine">Print or PDF lays out two days per A4 sheet (A4 landscape, one day per A5 page), each headed with its full date. Choose Save as PDF in the print window to keep a copy. Plain text is only your writing and the dates.</p>
+        <div class="row">
+          <button class="btn" id="expJson" type="button">Full backup</button>
+          <button class="btn" id="impBtn" type="button">Restore backup</button>
+          <input type="file" id="impFile" accept="application/json,.json" hidden>
+        </div>
+        <p class="fine">The full backup holds every entry and photo. Restoring adds back anything missing and never overwrites an entry.</p>
+        <p class="msg" id="msg" aria-live="polite"></p>
+      </div>
+    </details>
+  </section>
+
+  <main>
+    <div class="dateblock">
+      <div>
+        <div class="wk" id="dWeek"></div>
+        <div class="date" id="dDate"></div>
+        <div class="meta"><span id="dMeta"></span><button class="link" id="today" type="button" hidden>Back to today</button></div>
+      </div>
+      <div class="group" role="group" aria-label="Change day">
+        <button class="ibtn" id="prev" type="button" aria-label="Previous day" title="Previous day"><svg class="ic"><use href="#i-left"/></svg></button>
+        <button class="ibtn" id="next" type="button" aria-label="Next day" title="Next day"><svg class="ic"><use href="#i-right"/></svg></button>
+      </div>
+    </div>
+
+    <section class="panel scan" id="scan" hidden aria-label="Read a handwritten page">
+      <h3 id="scanTitle">Reading your page</h3>
+      <textarea id="scanText" aria-label="Text read from your page" hidden></textarea>
+      <div class="row"><label class="keep" id="keepWrap" hidden><input type="checkbox" id="keep" checked> Keep the photo with this entry</label></div>
+      <div class="row">
+        <button class="btn primary" id="scanAdd" type="button" hidden>Add to this entry</button>
+        <button class="btn" id="scanCancel" type="button">Cancel</button>
+      </div>
+    </section>
+
+    <div class="write">
+      <input id="title" type="text" placeholder="Title" maxlength="120" autocomplete="off" aria-label="Entry title">
+      <textarea id="body" placeholder="Loading…" aria-label="Journal entry" spellcheck="true" readonly></textarea>
+      <div class="photos" id="photos" hidden></div>
+    </div>
+
+    <div class="foot">
+      <div class="group" role="toolbar" aria-label="Entry tools">
+        <button class="ibtn" id="stamp" type="button" aria-label="Add the time" title="Add the time"><svg class="ic"><use href="#i-clock"/></svg></button>
+        <button class="ibtn" id="scanBtn" type="button" aria-label="Scan a handwritten page" title="Scan a page"><svg class="ic"><use href="#i-scan"/></svg></button>
+        <button class="ibtn" id="fix" type="button" aria-label="Correct spelling and grammar now" title="Correct spelling and grammar"><svg class="ic"><use href="#i-wand"/></svg></button>
+        <button class="ibtn" id="auto" type="button" aria-label="Auto-correct while I write" title="Auto-correct as I write" aria-pressed="false"><svg class="ic"><use href="#i-spell"/></svg></button>
+        <button class="ibtn" id="undo" type="button" aria-label="Undo the last correction" title="Undo correction" hidden><svg class="ic"><use href="#i-undo"/></svg></button>
+      </div>
+      <input type="file" id="scanFile" accept="image/*" hidden>
+      <div class="info"><span id="wc">0 words</span><span id="status" role="status"></span></div>
+      <button class="ibtn danger end" id="del" type="button" aria-label="Delete this entry" title="Delete entry" hidden><svg class="ic"><use href="#i-trash"/></svg></button>
+    </div>
+  </main>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

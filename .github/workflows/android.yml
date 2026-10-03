@@ -1,0 +1,60 @@
+# Builds the Daybook Android app (APK) on GitHub's free build machines.
+# Runs by itself whenever the website files change, and can be started by hand from the Actions tab.
+# The app contains the whole journal screen inside it, so it opens and lets you write even with no internet.
+# Your entries still live online in your Firebase account and upload when you are connected.
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['docs/**', 'signing/**', '.github/workflows/android.yml']
+permissions:
+  contents: write
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Install Capacitor
+        run: npm install --no-audit --no-fund @capacitor/core@7 @capacitor/cli@7 @capacitor/android@7
+      - name: Configure the app
+        run: |
+          cat > capacitor.config.json <<JSON
+          {
+            "appId": "app.daybook.journal",
+            "appName": "Daybook",
+            "webDir": "docs",
+            "server": { "androidScheme": "https" },
+            "android": { "backgroundColor": "#FBFBFA" }
+          }
+          JSON
+      - name: Create the Android project
+        run: |
+          npx cap add android
+          sed -i 's#<application#<uses-permission android:name="android.permission.CAMERA" />\n    <application#' android/app/src/main/AndroidManifest.xml
+          npx cap sync android
+      - name: Use the same signing key every time, so new versions install over old ones
+        run: |
+          mkdir -p ~/.android
+          cp signing/debug.keystore ~/.android/debug.keystore
+      - name: Build
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Daybook-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish on the Releases page
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-latest
+          name: Daybook Android app
+          body: Download app-debug.apk on your phone and open it to install or update.
+          files: android/app/build/outputs/apk/debug/app-debug.apk
