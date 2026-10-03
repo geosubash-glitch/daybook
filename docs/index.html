@@ -70,7 +70,7 @@ button { cursor: pointer; }
 .btn:disabled { opacity: .35; cursor: default; }
 .btn.primary { background: var(--ink); color: var(--ink-on); }
 .btn.primary:hover:not(:disabled) { opacity: .85; }
-select, input[type="date"], input[type="search"], input[type="password"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3); height: 44px; max-width: 100%; }
+select, input[type="date"], input[type="search"], input[type="password"], input[type="email"], input[type="text"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3); height: 44px; max-width: 100%; }
 .row { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
 
 /* date + navigation */
@@ -155,6 +155,15 @@ input[type="search"] { width: 100%; }
 .lightbox .ibtn { position: absolute; top: max(var(--s4), env(safe-area-inset-top)); right: var(--s4); }
 .section { display: grid; gap: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--rule); }
 .section:first-of-type { border-top: 0; padding-top: 0; }
+
+.lock .lockcard input[type="email"], .lock .lockcard input[type="password"], .lock .lockcard input[type="text"] { height: 52px; padding: 0 var(--s4); border-radius: 14px; font-size: 1rem; width: 100%; box-sizing: border-box; }
+.lock .lockcard input:focus { outline: none; border-color: var(--ink); }
+.lock .lockcard .btn { height: 52px; border-radius: 14px; width: 100%; }
+.lock .lockcard .row .btn { width: auto; }
+.lock input:-webkit-autofill { -webkit-text-fill-color: var(--ink); box-shadow: 0 0 0 100px var(--bg) inset; caret-color: var(--ink); }
+.lockcard .mark { display: block; width: 28px; height: 1px; background: var(--ink); margin: 0 0 var(--s5); }
+.lockcard .sub { font-family: var(--f-write); font-style: italic; font-size: 1.05rem; color: var(--ink-2); margin-bottom: var(--s3); }
+.lockcard h1 { font-size: 1.6rem; margin-bottom: 0; }
 .lockerr { color: var(--danger); min-height: 1.2em; font-size: .88rem; }
 </style>
 </head>
@@ -185,8 +194,9 @@ input[type="search"] { width: 100%; }
 <div class="lock" id="signin" hidden>
   <div class="lockcard">
     <h1>Daybook</h1>
+    <span class="mark"></span>
     <form id="signinForm">
-      <p>Sign in to your journal.</p>
+      <p class="sub">Your pages, kept private.</p>
       <input type="email" id="siEmail" autocomplete="username" placeholder="Email" aria-label="Email">
       <input type="password" id="siPass" autocomplete="current-password" placeholder="Password" aria-label="Password">
       <button class="btn primary" type="submit">Sign in</button>
