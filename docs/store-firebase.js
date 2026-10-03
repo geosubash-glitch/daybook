@@ -14,6 +14,26 @@ function nativeAuth() {
   try { return C.registerPlugin('FirebaseAuthentication'); } catch (e) { return null; }
 }
 
+// Website Google sign-in through Google's own pop-up. This avoids the redirect page that phone browsers block.
+function gisToken(clientId) {
+  return new Promise((resolve, reject) => {
+    const go = () => {
+      try {
+        const c = window.google.accounts.oauth2.initTokenClient({
+          client_id: clientId, scope: 'openid email profile', prompt: 'select_account',
+          callback: (r) => (r && r.access_token ? resolve(r.access_token) : reject(Object.assign(new Error((r && r.error) || 'no token'), { code: 'auth/popup-closed-by-user' }))),
+          error_callback: (e) => reject(Object.assign(new Error((e && e.type) || 'popup'), { code: e && e.type === 'popup_failed_to_open' ? 'auth/popup-blocked' : 'auth/popup-closed-by-user' }))
+        });
+        c.requestAccessToken();
+      } catch (e) { reject(e); }
+    };
+    if (window.google && window.google.accounts && window.google.accounts.oauth2) return go();
+    const s = document.createElement('script'); s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+    s.onload = go; s.onerror = () => reject(Object.assign(new Error('network'), { code: 'auth/network-request-failed' }));
+    document.head.appendChild(s);
+  });
+}
+
 export function createStore(cfg) {
   const app = initializeApp(cfg.firebase);
   const auth = getAuth(app);
@@ -39,6 +59,10 @@ export function createStore(cfg) {
         if (!idToken) throw Object.assign(new Error('no token'), { code: 'app/no-google' });
         return signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
       }
+      if (cfg.firebase.googleClientId) {
+        const at = await gisToken(cfg.firebase.googleClientId);
+        return signInWithCredential(auth, GoogleAuthProvider.credential(null, at));
+      }
       return signInWithPopup(auth, new GoogleAuthProvider());
     },
     signOut: async () => {
@@ -56,6 +80,9 @@ export function createStore(cfg) {
         if (FA) {
           const r = await FA.signInWithGoogle({ skipNativeAuth: true });
           await reauthenticateWithCredential(u, GoogleAuthProvider.credential(r.credential.idToken));
+        } else if (cfg.firebase.googleClientId) {
+          const at = await gisToken(cfg.firebase.googleClientId);
+          await reauthenticateWithCredential(u, GoogleAuthProvider.credential(null, at));
         } else await reauthenticateWithPopup(u, new GoogleAuthProvider());
       }
       for (const name of ['entries', 'photos', 'settings']) {
