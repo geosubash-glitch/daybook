@@ -50,9 +50,19 @@ jobs:
         run: |
           mkdir -p ~/.android
           cp signing/debug.keystore ~/.android/debug.keystore
-      - name: Build
+      - name: Build, signed with the project's own key (Google sign-in checks this signature)
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          ./gradlew assembleDebug --no-daemon \
+            -Pandroid.injected.signing.store.file="$GITHUB_WORKSPACE/signing/debug.keystore" \
+            -Pandroid.injected.signing.store.password=android \
+            -Pandroid.injected.signing.key.alias=androiddebugkey \
+            -Pandroid.injected.signing.key.password=android
+      - name: Check the signature matches the one registered in Firebase
+        run: |
+          SIGNER=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner
+          "$SIGNER" verify --print-certs android/app/build/outputs/apk/debug/app-debug.apk | tee certs.txt
+          grep -qi "SHA-1 digest: b5889ce85539570061d7ca31cb20b1981fcc1ffe" certs.txt || (echo "Wrong signing key: Google sign-in would fail" && exit 1)
       - uses: actions/upload-artifact@v4
         with:
           name: Daybook-apk
