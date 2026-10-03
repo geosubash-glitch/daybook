@@ -7,11 +7,14 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendP
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, getCountFromServer }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
-// The Android app carries a native Google sign-in helper. Ask the app runtime for it by name.
+// The Android app carries a native Google sign-in helper. The app's own bridge calls it by name.
 function nativeAuth() {
   const C = window.Capacitor;
-  if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
-  try { return C.registerPlugin('FirebaseAuthentication'); } catch (e) { return null; }
+  if (!C || typeof C.isNativePlatform !== 'function' || !C.isNativePlatform() || typeof C.nativePromise !== 'function') return null;
+  return {
+    signInWithGoogle: (o) => C.nativePromise('FirebaseAuthentication', 'signInWithGoogle', o || {}),
+    signOut: () => C.nativePromise('FirebaseAuthentication', 'signOut', {})
+  };
 }
 
 // Website Google sign-in through Google's own pop-up. This avoids the redirect page that phone browsers block.
