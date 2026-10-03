@@ -50,7 +50,7 @@ open the website in Chrome on your phone and choose **Install app** (or Add to H
 
 ## 4. Use it
 
-- Settings (the sliders icon): set a **passcode** and a recovery word. Optionally paste a free **Gemini key**
+- Settings (the sliders icon): set a **passcode** and a recovery word. Grammar fixing needs no setup.
   (https://aistudio.google.com/apikey) to switch on scanning handwritten pages and fixing spelling and grammar.
 - Print or PDF: pick the time span; the sheet is A4 landscape with two days per sheet, one day per A5 page.
 - Plain text saves only your writing with its dates.

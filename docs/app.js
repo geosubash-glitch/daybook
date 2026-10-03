@@ -1,5 +1,5 @@
 import { config } from './config.js';
-import * as ai from './ai.js';
+import { correct, fixError } from './grammar.js';
 
 const $ = (s) => document.querySelector(s);
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -72,7 +72,7 @@ async function onAuth(user) {
     $('#siErr').textContent = 'Signed in, but the journal could not be reached. Check your connection and that the Firestore rules were published.';
     return;
   }
-  autoFix = !!prefs.autoFix; setAutoUi(); renderAiSettings();
+  autoFix = !!prefs.autoFix; setAutoUi();
   if (lockData && lockData.hash && hasCrypto) showLock(); else start();
 }
 function teardown() {
@@ -294,29 +294,10 @@ document.addEventListener('visibilitychange', () => {
 });
 
 /* ---------- settings: Gemini key ---------- */
-function renderAiSettings() {
-  $('#aiKey').value = '';
-  $('#aiKey').placeholder = prefs.geminiKey ? 'Key saved. Paste a new one to replace it.' : 'Gemini API key';
-  $('#aiModel').value = prefs.model || '';
-  $('#aiModel').placeholder = 'Model, for example ' + ai.DEFAULT_MODEL;
-}
 async function savePrefs(msg) {
   try { await store.setSetting('prefs', prefs); $('#lpMsg').textContent = msg || ''; return true; }
   catch (e) { $('#lpMsg').textContent = 'Could not save. Check your connection.'; return false; }
 }
-$('#aiSave').addEventListener('click', async () => {
-  if (!navigator.onLine) { $('#lpMsg').textContent = 'Connect to the internet to change settings.'; return; }
-  const key = $('#aiKey').value.trim(), model = $('#aiModel').value.trim();
-  if (!key && !prefs.geminiKey) { $('#lpMsg').textContent = 'Paste your Gemini key first.'; return; }
-  if (key) prefs.geminiKey = key;
-  if (model) prefs.model = model; else delete prefs.model;
-  if (await savePrefs('Saved.')) renderAiSettings();
-});
-$('#aiRemove').addEventListener('click', async () => {
-  if (!navigator.onLine) { $('#lpMsg').textContent = 'Connect to the internet to change settings.'; return; }
-  delete prefs.geminiKey; autoFix = false; prefs.autoFix = false; setAutoUi();
-  if (await savePrefs('Key removed.')) renderAiSettings();
-});
 
 /* ---------- editor ---------- */
 function readEditor() { return { date: cur, title: $('#title').value.trim(), body: $('#body').value.replace(/\s+$/, ''), photos: photos.slice() }; }
@@ -639,16 +620,14 @@ function setAutoUi() {
   a.setAttribute('aria-label', autoFix ? 'Auto-correct is on. Press to turn off.' : 'Auto-correct while I write');
 }
 async function fixText(core) {
-  const r = await ai.correct(prefs, core);
-  const out = (r.text || '').trim(), n = core.length;
-  if (!out || r.truncated || out.length > n * 1.3 + 20 || out.length < n * 0.7 - 20) return null;
+  const out = (await correct(core)).trim(), n = core.length;
+  if (!out || out.length > n * 1.3 + 20 || out.length < n * 0.7 - 20) return null;
   return out;
 }
 const wrapKeep = (src, out) => src.match(/^\s*/)[0] + out + src.match(/\s*$/)[0];
 function showUndo(info) { undoInfo = info; $('#undo').hidden = !info; }
 async function fixNow() {
   if (!editable || fixBusy) return;
-  if (!prefs.geminiKey) { setStatus(ai.aiError({ code: 'no_key' })); return; }
   const b = $('#body'), src = b.value, core = src.trim();
   if (words(core) < 2) { setStatus('Nothing to correct yet'); return; }
   fixBusy = true; $('#fix').disabled = true; setStatus('Correcting…');
@@ -658,11 +637,11 @@ async function fixNow() {
     else if (out === null) setStatus('Could not correct that safely. Nothing changed.');
     else if (out === core) setStatus('No mistakes found');
     else { const neu = wrapKeep(src, out); b.value = neu; showUndo({ before: src, after: neu }); lastFixed = ''; autosize(); updateWc(); touch(); }
-  } catch (e) { setStatus(ai.aiError(e)); }
+  } catch (e) { setStatus(fixError(e)); }
   fixBusy = false; $('#fix').disabled = false;
 }
 async function autoRun() {
-  if (!autoFix || !editable || fixBusy || !prefs.geminiKey) return;
+  if (!autoFix || !editable || fixBusy) return;
   const b = $('#body'), v = b.value, pos = b.selectionStart;
   const s = v.lastIndexOf('\n', pos - 1) + 1; let e = v.indexOf('\n', pos); if (e < 0) e = v.length;
   const seg = v.slice(s, e), core = seg.trim();
@@ -681,7 +660,7 @@ async function autoRun() {
       autosize(); updateWc(); touch();
     }
   } catch (err) {
-    if (err && ['no_key', 'bad_key', 'bad_model', 'rate_limited'].includes(err.code)) { autoFix = false; setAutoUi(); setStatus(ai.aiError(err)); }
+    if (err && err.code === 'rate_limited') setStatus(fixError(err));
   }
   fixBusy = false;
 }
@@ -690,13 +669,12 @@ async function autoRun() {
 $('#body').addEventListener('input', () => {
   autosize(); updateWc(); touch();
   clearTimeout(fixTimer);
-  if (autoFix && prefs.geminiKey) fixTimer = setTimeout(autoRun, 3500);
+  if (autoFix) fixTimer = setTimeout(autoRun, 3500);
 });
 $('#title').addEventListener('input', touch);
 $('#fix').addEventListener('click', fixNow);
 $('#auto').addEventListener('click', async () => {
-  if (!prefs.geminiKey) { setStatus(ai.aiError({ code: 'no_key' })); return; }
-  autoFix = !autoFix; prefs.autoFix = autoFix; setAutoUi();
+  autoFix = !autoFix; prefs.autoFix = autoFix; delete prefs.geminiKey; delete prefs.model; setAutoUi();
   setStatus(autoFix ? 'Auto-correct on' : 'Auto-correct off');
   store.setSetting('prefs', prefs).catch(() => {});
   if (autoFix) autoRun();

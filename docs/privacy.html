@@ -38,7 +38,7 @@ a { color:inherit; text-underline-offset:3px; }
 <ul>
 <li><b>Your account:</b> the email address and name on the Google account you sign in with (or the email you registered), and an account ID.</li>
 <li><b>Your journal:</b> each entry's date, title and text.</li>
-<li><b>Your settings:</b> a scrambled check of your passcode (never the passcode itself), your auto-correct choice, and, if you add one, your own Gemini API key.</li>
+<li><b>Your settings:</b> a scrambled check of your passcode (never the passcode itself), and your auto-correct choice.</li>
 </ul>
 <p>Daybook does not use advertising, does not sell or share your data, and does not track you across other apps or sites. It has no analytics.</p>
 
@@ -50,7 +50,7 @@ a { color:inherit; text-underline-offset:3px; }
 <p>Only you, through your signed-in account. The database rules refuse every other account. Be aware of two honest limits: your entries are protected by sign-in and by Google's encryption in transit and at rest, but they are not end-to-end encrypted, so the person who administers the Firebase project could technically open the database in the Firebase console. That person is Geo Subash, who does not read journals and will only access data if you ask for help or the law requires it. The passcode inside Daybook is a screen lock, not encryption.</p>
 
 <h2>A feature that sends text to Google</h2>
-<p>If you use <b>Correct grammar</b>, the text you are working on is sent straight from your device to Google's Gemini service using the API key you provided. It is not sent through any Daybook server. Google handles it under the terms that apply to your Gemini key. The feature is optional; do not use it if you do not want that text to leave your device.</p>
+<p>If you use <b>Correct grammar</b> or <b>Auto-correct</b>, the text being checked (the whole entry, or the paragraph you are writing) is sent to <a href="https://languagetool.org/legal/privacy">LanguageTool</a>'s free checking service, which returns suggested fixes. LanguageTool says it does not store the text it checks. Nothing else, and nothing about your account, is sent. Both features are optional and off unless you press them.</p>
 
 <h2>How long it is kept</h2>
 <p>Until you delete it. Deleting an entry removes it. Deleting your account removes everything.</p>

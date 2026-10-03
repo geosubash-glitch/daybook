@@ -17,7 +17,7 @@ Write anywhere, even offline
 Keep writing with no signal. Your words are kept on the device and upload on their own when you are back online.
 
 Tidy up as you write
-Fix spelling and grammar on demand, or let Daybook do it as you go.
+Fix spelling and grammar on demand, or let Daybook do it as you go. No setup needed.
 
 Print or save any stretch of your life
 Choose any days, then print two days to an A4 sheet with every day dated, or save plain text with only your words and their dates.
