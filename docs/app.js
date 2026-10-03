@@ -293,12 +293,6 @@ document.addEventListener('visibilitychange', () => {
   else if (lockData && hasCrypto && hiddenAt && Date.now() - hiddenAt > 120000) { lockNow(); }
 });
 
-/* ---------- settings: Gemini key ---------- */
-async function savePrefs(msg) {
-  try { await store.setSetting('prefs', prefs); $('#lpMsg').textContent = msg || ''; return true; }
-  catch (e) { $('#lpMsg').textContent = 'Could not save. Check your connection.'; return false; }
-}
-
 /* ---------- editor ---------- */
 function readEditor() { return { date: cur, title: $('#title').value.trim(), body: $('#body').value.replace(/\s+$/, ''), photos: photos.slice() }; }
 function autosize() { const ta = $('#body'); ta.style.height = 'auto'; ta.style.height = Math.max(320, ta.scrollHeight + 8) + 'px'; }
