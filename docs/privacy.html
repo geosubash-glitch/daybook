@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Privacy Policy · Daybook</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Instrument+Sans:wght@400..600&family=Newsreader:opsz,wght@6..72,400..600&display=swap">
+<style>
+:root { --bg:#FBFBFA; --ink:#141414; --ink-2:#6E6E6A; --rule:#E2E2DE; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0F0F10; --ink:#ECECE8; --ink-2:#94948F; --rule:#2A2A2D; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 "Newsreader", Georgia, serif; padding: max(24px, env(safe-area-inset-top)) 24px max(64px, env(safe-area-inset-bottom)); }
+main { max-width: 40rem; margin: 0 auto; }
+.top { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--rule); margin-bottom:40px; }
+.brand { font:600 1.2rem "Cormorant Garamond", Georgia, serif; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:inherit; }
+.back { font:500 .78rem "Instrument Sans", system-ui, sans-serif; letter-spacing:.08em; text-transform:uppercase; color:inherit; text-decoration:none; border-bottom:1px solid var(--ink); }
+h1 { font:600 2.4rem/1.15 "Cormorant Garamond", Georgia, serif; margin:0 0 4px; text-wrap:balance; }
+.date { font:400 .85rem "Instrument Sans", system-ui, sans-serif; color:var(--ink-2); margin:0 0 36px; }
+h2 { font:600 .78rem "Instrument Sans", system-ui, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2); margin:40px 0 8px; }
+p, li { margin:0 0 12px; } ul { padding-left: 20px; margin:0 0 12px; }
+a { color:inherit; text-underline-offset:3px; }
+.lead { font-size:1.15rem; }
+</style>
+</head>
+<body><main>
+<div class="top"><a class="brand" href="index.html">Daybook</a><a class="back" href="index.html">Back to Daybook</a></div>
+<h1>Privacy Policy</h1>
+<p class="date">Effective 4 October 2026</p>
+<p class="lead">Daybook is a private journal. Your writing is yours. This page says plainly what is stored, where, who can see it, and how to remove it.</p>
+
+<h2>Who runs Daybook</h2>
+<p>Daybook is made and run by Geo Subash, an individual developer. Questions about privacy: <a href="mailto:geosubash@gmail.com">geosubash@gmail.com</a>.</p>
+
+<h2>What is stored</h2>
+<ul>
+<li><b>Your account:</b> the email address and name on the Google account you sign in with (or the email you registered), and an account ID.</li>
+<li><b>Your journal:</b> each entry's date, title and text, and any photographs of handwritten pages that you chose to keep.</li>
+<li><b>Your settings:</b> a scrambled check of your passcode (never the passcode itself), your auto-correct choice, and, if you add one, your own Gemini API key.</li>
+</ul>
+<p>Daybook does not use advertising, does not sell or share your data, and does not track you across other apps or sites. It has no analytics.</p>
+
+<h2>Where it is stored</h2>
+<p>Your journal is stored in Google Firebase (Authentication and Cloud Firestore), in a private area that only your account can read or write. A copy is also kept on your device so you can write offline. It uploads when you reconnect.</p>
+<p>The website is hosted on GitHub Pages. GitHub receives ordinary web requests, such as your IP address, when you open the site.</p>
+
+<h2>Who can see your writing</h2>
+<p>Only you, through your signed-in account. The database rules refuse every other account. Be aware of two honest limits: your entries are protected by sign-in and by Google's encryption in transit and at rest, but they are not end-to-end encrypted, so the person who administers the Firebase project could technically open the database in the Firebase console. That person is Geo Subash, who does not read journals and will only access data if you ask for help or the law requires it. The passcode inside Daybook is a screen lock, not encryption.</p>
+
+<h2>Features that send text or photos to Google</h2>
+<p>If you use <b>Scan a page</b> or <b>Correct grammar</b>, the photo or the text you are working on is sent straight from your device to Google's Gemini service using the API key you provided. It is not sent through any Daybook server. Google handles it under the terms that apply to your Gemini key. Do not use these features if you do not want that text or photo to leave your device. They are optional.</p>
+
+<h2>How long it is kept</h2>
+<p>Until you delete it. Deleting an entry removes it. Deleting your account removes everything.</p>
+
+<h2>Your choices and rights</h2>
+<ul>
+<li><b>See and export:</b> use Print or save for a text or printable copy, and Settings, then Back up everything, for a complete file.</li>
+<li><b>Delete everything:</b> Settings, then Delete my account and journal. It erases all entries, photos, settings and your sign-in at once. You can also read <a href="delete-account.html">how to request deletion</a>.</li>
+<li><b>Anything else</b> that your local law gives you, such as correction or a copy of your data: email the address above.</li>
+</ul>
+
+<h2>Children</h2>
+<p>Daybook is for people aged 13 or over, or the minimum age to use a Google account in your country. It is not directed at children.</p>
+
+<h2>Changes</h2>
+<p>If this policy changes in a way that matters, the date at the top will change and the app will say so.</p>
+</main></body></html>

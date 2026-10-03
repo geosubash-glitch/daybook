@@ -2,9 +2,9 @@
 // This is the only file that talks to Firebase. To move Daybook to another
 // database someday, write a new store with the same functions as this one.
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail }
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, signInWithCredential, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, collection, doc, getDoc, getDocs, setDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, getCountFromServer }
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, getCountFromServer }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
 export function createStore(cfg) {
@@ -21,9 +21,49 @@ export function createStore(cfg) {
   const rows = (s) => s.docs.map((d) => d.data());
 
   return {
-    onAuth(cb) { return onAuthStateChanged(auth, (u) => { uid = u ? u.uid : null; cb(u ? { email: u.email } : null); }); },
+    onAuth(cb) { return onAuthStateChanged(auth, (u) => { uid = u ? u.uid : null; cb(u ? { email: u.email, provider: (u.providerData[0] && u.providerData[0].providerId) || 'password' } : null); }); },
     signIn: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
-    signOut: () => signOut(auth),
+    async signInGoogle() {
+      // In the Android app a normal pop-up cannot open, so the phone's own Google account picker is used.
+      const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+      if (native) {
+        const FA = window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication;
+        if (!FA) throw Object.assign(new Error('no plugin'), { code: 'app/no-google' });
+        const r = await FA.signInWithGoogle({ skipNativeAuth: true });
+        const idToken = r && r.credential && r.credential.idToken;
+        if (!idToken) throw Object.assign(new Error('no token'), { code: 'app/no-google' });
+        return signInWithCredential(auth, GoogleAuthProvider.credential(idToken));
+      }
+      return signInWithPopup(auth, new GoogleAuthProvider());
+    },
+    signOut: async () => {
+      try { const FA = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication; if (FA) await FA.signOut(); } catch (e) {}
+      return signOut(auth);
+    },
+    // Permanently erase this person's journal and account. Re-checks who they are first.
+    async deleteAccount(password, onStep) {
+      const u = auth.currentUser; if (!u) throw Object.assign(new Error('signed out'), { code: 'app/signed-out' });
+      const pid = (u.providerData[0] && u.providerData[0].providerId) || 'password';
+      if (pid === 'password') {
+        await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, password || ''));
+      } else {
+        const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+        if (native) {
+          const FA = window.Capacitor.Plugins.FirebaseAuthentication;
+          const r = await FA.signInWithGoogle({ skipNativeAuth: true });
+          await reauthenticateWithCredential(u, GoogleAuthProvider.credential(r.credential.idToken));
+        } else await reauthenticateWithPopup(u, new GoogleAuthProvider());
+      }
+      for (const name of ['entries', 'photos', 'settings']) {
+        if (onStep) onStep(name);
+        for (;;) {
+          const snap = await getDocs(query(col(name), limit(400)));
+          if (snap.empty) break;
+          const b = writeBatch(db); snap.docs.forEach((d) => b.delete(d.ref)); await b.commit();
+        }
+      }
+      await deleteUser(u);
+    },
     resetPassword: (email) => sendPasswordResetEmail(auth, email),
 
     watchRecent(fromDate, cb, onErr) {

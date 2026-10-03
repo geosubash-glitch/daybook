@@ -1,9 +1,63 @@
 rules_version = '2';
+// Daybook database rules.
+// 1. Every person can reach only their own area: users/{their own id}/...
+// 2. Everything written is checked for shape and size, so nothing odd or oversized can be stored.
+// 3. Everything else in the database is closed.
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Only the signed-in owner can read or write their own journal. Nobody else, ever.
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+    function isOwner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function fields(list) { return request.resource.data.keys().hasOnly(list); }
+    function hasAll(list) { return request.resource.data.keys().hasAll(list); }
+    function text(field, max) { return request.resource.data[field] is string && request.resource.data[field].size() <= max; }
+
+    match /users/{uid} {
+
+      // One document per day. The id is the date, for example 2026-10-04.
+      match /entries/{day} {
+        allow read: if isOwner(uid);
+        allow delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+          && fields(['date', 'title', 'body', 'photos', 'updated'])
+          && hasAll(['date', 'title', 'body', 'photos', 'updated'])
+          && request.resource.data.date == day
+          && text('title', 500)
+          && text('body', 200000)
+          && request.resource.data.photos is list
+          && request.resource.data.photos.size() <= 24
+          && request.resource.data.updated is number;
+      }
+
+      // Scanned page photos, stored as small compressed images.
+      match /photos/{photoId} {
+        allow read: if isOwner(uid);
+        allow delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && photoId.size() <= 80
+          && fields(['data', 'date', 'created'])
+          && hasAll(['data', 'date', 'created'])
+          && text('data', 850000)
+          && request.resource.data.data.matches('^data:image/(jpeg|png|webp);base64,.*')
+          && text('date', 10)
+          && request.resource.data.created is number;
+      }
+
+      // Two small settings documents: the passcode check and the preferences.
+      match /settings/{name} {
+        allow read: if isOwner(uid);
+        allow delete: if isOwner(uid);
+        allow create, update: if isOwner(uid)
+          && (
+            (name == 'lock' && fields(['salt', 'hash', 'rhash']) && hasAll(['salt', 'hash', 'rhash'])
+              && text('salt', 200) && text('hash', 200) && text('rhash', 200))
+            ||
+            (name == 'prefs' && fields(['geminiKey', 'model', 'autoFix'])
+              && (!('geminiKey' in request.resource.data) || text('geminiKey', 400))
+              && (!('model' in request.resource.data) || text('model', 100))
+              && (!('autoFix' in request.resource.data) || request.resource.data.autoFix is bool))
+          );
+      }
     }
   }
 }

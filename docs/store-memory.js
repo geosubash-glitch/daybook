@@ -10,6 +10,8 @@ export function createStore(cfg) {
   return {
     onAuth(cb) { authCb = cb; setTimeout(() => cb(user), 0); return () => {}; },
     async signIn(email) { user = { email }; authCb(user); },
+    async signInGoogle() { user = { email: 'you@gmail.com' }; authCb(user); },
+    async deleteAccount() { entries.clear(); settings.clear(); photos.clear(); user = null; authCb(null); },
     async signOut() { user = null; authCb(null); },
     async resetPassword() {},
     watchRecent(from, cb) {

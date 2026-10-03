@@ -48,7 +48,7 @@ function setStatus(t) {
   if (t === 'saved') { s.innerHTML = icon('check'); s.setAttribute('aria-label', 'Saved'); s.title = 'Saved'; }
   else { s.textContent = t; s.removeAttribute('aria-label'); s.title = ''; }
 }
-const setMsg = (t) => { $('#msg').textContent = t; };
+const setMsg = (t) => { $('#msg').textContent = t; $('#lpMsg').textContent = t; };
 function showBanner(t) { const b = $('#banner'); b.textContent = t; b.hidden = !t; }
 
 /* ---------- boot and sign-in ---------- */
@@ -60,9 +60,11 @@ async function boot() {
   } catch (e) { gate('#signin'); $('#siErr').textContent = 'Could not load the database. Check your connection and reload.'; return; }
   store.onAuth(onAuth);
 }
+let acctProvider = 'password';
 async function onAuth(user) {
   if (!user) { teardown(); gate('#signin'); return; }
   $('#acct').textContent = 'Signed in as ' + user.email;
+  acctProvider = user.provider || 'password';
   try {
     lockData = await store.getSetting('lock');
     prefs = (await store.getSetting('prefs')) || {};
@@ -81,7 +83,7 @@ function teardown() {
   loaded = editable = started = dirty = allLoaded = false;
   lockData = null; prefs = {}; totalCount = null; firstDate = null; undoInfo = null;
   $('#body').value = ''; $('#title').value = ''; $('#results').textContent = ''; $('#q').value = '';
-  $('#lockPanel').hidden = true; $('#browse').hidden = true; closeScan();
+  $('#lockPanel').hidden = true; $('#browse').hidden = true; $('#exportPanel').hidden = true; closeScan();
   $('#siPass').value = '';
 }
 $('#signinForm').addEventListener('submit', async (ev) => {
@@ -95,11 +97,41 @@ $('#signinForm').addEventListener('submit', async (ev) => {
     $('#siErr').textContent = /too-many/.test(c) ? 'Too many attempts. Wait a few minutes.' : /network/.test(c) ? 'No connection.' : 'That email or password is not right.';
   }
 });
+$('#siGoogle').addEventListener('click', async () => {
+  $('#siErr').textContent = '';
+  try { await store.signInGoogle(); }
+  catch (e) {
+    const c = e && e.code || '', m = String(e && e.message || '');
+    if (/popup-closed|cancel/i.test(c + m)) return;
+    $('#siErr').textContent = /network/.test(c) ? 'No connection.' : /popup-blocked/.test(c) ? 'Your browser blocked the Google window. Allow pop-ups for this page and try again.' : /unauthorized-domain/.test(c) ? 'This web address is not approved in Firebase yet.' : 'Google sign-in did not complete. Try again.';
+  }
+});
 $('#siReset').addEventListener('click', async () => {
   const email = $('#siEmail').value.trim();
   if (!email) { $('#siErr').textContent = 'Type your email above first.'; return; }
   try { await store.resetPassword(email); $('#siErr').textContent = 'If that account exists, a reset email is on its way.'; }
   catch (e) { $('#siErr').textContent = 'Could not send the email right now.'; }
+});
+function resetDelete() { $('#delBox').hidden = true; $('#delOpen').hidden = false; $('#delPass').value = ''; }
+$('#delOpen').addEventListener('click', () => {
+  $('#delOpen').hidden = true; $('#delBox').hidden = false;
+  const pw = acctProvider === 'password';
+  $('#delPass').hidden = !pw; $('#delGoogle').hidden = pw;
+  $('#lpMsg').textContent = '';
+});
+$('#delCancel').addEventListener('click', resetDelete);
+$('#delGo').addEventListener('click', async () => {
+  if (!navigator.onLine) { $('#lpMsg').textContent = 'Connect to the internet to delete your account.'; return; }
+  const btn = $('#delGo'); btn.disabled = true; $('#lpMsg').textContent = 'Checking it is you…';
+  try {
+    clearTimeout(timer); dirty = false; pending = 0;
+    await store.deleteAccount($('#delPass').value, (n) => { $('#lpMsg').textContent = 'Erasing ' + n + '…'; });
+    $('#lpMsg').textContent = '';
+  } catch (e) {
+    const c = e && e.code || '';
+    $('#lpMsg').textContent = /wrong-password|invalid-credential/.test(c) ? 'That password is not right.' : /popup-closed|cancel/i.test(c + (e && e.message || '')) ? 'Cancelled. Nothing was deleted.' : /network/.test(c) ? 'No connection. Try again.' : 'Could not finish. Some data may have been erased. Sign in and try again.';
+    btn.disabled = false;
+  }
 });
 $('#signOut').addEventListener('click', async () => {
   await flush();
@@ -224,13 +256,17 @@ function renderLockPanel() {
   $('#lpOnBox').hidden = !hasCrypto || !lockData;
   $('#lpMsg').textContent = !hasCrypto ? 'A passcode is not available in this browser.' : '';
 }
-function closePanel() { $('#lockPanel').hidden = true; $('#lockBtn').setAttribute('aria-expanded', 'false'); }
+function closePanel() { resetDelete(); $('#lockPanel').hidden = true; $('#lockBtn').setAttribute('aria-expanded', 'false'); }
 $('#lockBtn').addEventListener('click', () => {
   const p = $('#lockPanel'); p.hidden = !p.hidden;
   $('#lockBtn').setAttribute('aria-expanded', String(!p.hidden));
-  if (!p.hidden) renderLockPanel();
+  if (!p.hidden) { closeExport(); closeBrowse(); renderLockPanel(); }
 });
 $('#lpClose').addEventListener('click', closePanel);
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (!$('#lockPanel').hidden) closePanel(); else if (!$('#exportPanel').hidden) closeExport(); else if (!$('#browse').hidden) closeBrowse();
+});
 $('#lockNow').addEventListener('click', lockNow);
 $('#lpOn').addEventListener('click', async () => {
   if (!navigator.onLine) { $('#lpMsg').textContent = 'Connect to the internet to change settings.'; return; }
@@ -489,9 +525,10 @@ function rangeLabel(list) {
 }
 let exportToken = 0, exportCount = 0;
 async function renderExport() {
-  const c = parseKey(cur), opts = $('#range').options, my = ++exportToken;
-  opts[2].textContent = MONTHS[c.getMonth()] + ' ' + c.getFullYear();
-  opts[3].textContent = 'All of ' + c.getFullYear();
+  const c = parseKey(cur), my = ++exportToken;
+  $('#chipMonth').textContent = MONTHS[c.getMonth()] + ' ' + c.getFullYear();
+  $('#chipYear').textContent = 'All of ' + c.getFullYear();
+  document.querySelectorAll('#chips .chip').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.v === $('#range').value)));
   $('#customRow').hidden = $('#range').value !== 'custom';
   if (!store || !started) return;
   let n = 0;
@@ -502,7 +539,7 @@ async function renderExport() {
   if (my !== exportToken) return;
   exportCount = n;
   $('#rangeInfo').textContent = n < 0 ? 'The count needs a connection.' : n + (n === 1 ? ' entry' : ' entries') + ' in this range';
-  ['#expPrint', '#expBook', '#expTxt'].forEach((s) => { $(s).disabled = n === 0; });
+  ['#expPrint', '#expTxt'].forEach((s) => { $(s).disabled = n === 0; });
 }
 function download(name, data, mime) {
   const url = URL.createObjectURL(new Blob([data], { type: mime }));
@@ -764,7 +801,7 @@ $('#photos').addEventListener('click', (ev) => {
 $('#browseBtn').addEventListener('click', () => {
   const b = $('#browse'); b.hidden = !b.hidden;
   $('#browseBtn').setAttribute('aria-expanded', String(!b.hidden));
-  if (!b.hidden) { refreshMeta(); renderExport(); }
+  if (!b.hidden) { closeExport(); closePanel(); refreshMeta(); }
 });
 $('#prev').addEventListener('click', () => shift(-1));
 $('#next').addEventListener('click', () => shift(1));
@@ -778,7 +815,14 @@ let qTimer = null;
 $('#q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(renderSearch, 250); });
 ['#range', '#from', '#to'].forEach((s) => $(s).addEventListener('change', renderExport));
 $('#expPrint').addEventListener('click', () => runExport('print'));
-$('#expBook').addEventListener('click', () => runExport('book'));
+document.querySelectorAll('#chips .chip').forEach((b) => b.addEventListener('click', () => { $('#range').value = b.dataset.v; renderExport(); }));
+function closeExport() { $('#exportPanel').hidden = true; $('#exportBtn').setAttribute('aria-expanded', 'false'); }
+$('#exClose').addEventListener('click', closeExport);
+$('#exportBtn').addEventListener('click', () => {
+  const p = $('#exportPanel'); p.hidden = !p.hidden;
+  $('#exportBtn').setAttribute('aria-expanded', String(!p.hidden));
+  if (!p.hidden) { closePanel(); closeBrowse(); setMsg(''); renderExport(); }
+});
 $('#expTxt').addEventListener('click', () => runExport('text'));
 $('#expJson').addEventListener('click', runBackup);
 $('#impBtn').addEventListener('click', () => $('#impFile').click());
