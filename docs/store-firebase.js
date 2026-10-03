@@ -7,6 +7,13 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendP
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, getCountFromServer }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 
+// The Android app carries a native Google sign-in helper. Ask the app runtime for it by name.
+function nativeAuth() {
+  const C = window.Capacitor;
+  if (!C || !C.isNativePlatform || !C.isNativePlatform()) return null;
+  try { return C.registerPlugin('FirebaseAuthentication'); } catch (e) { return null; }
+}
+
 export function createStore(cfg) {
   const app = initializeApp(cfg.firebase);
   const auth = getAuth(app);
@@ -25,10 +32,8 @@ export function createStore(cfg) {
     signIn: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
     async signInGoogle() {
       // In the Android app a normal pop-up cannot open, so the phone's own Google account picker is used.
-      const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-      if (native) {
-        const FA = window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication;
-        if (!FA) throw Object.assign(new Error('no plugin'), { code: 'app/no-google' });
+      const FA = nativeAuth();
+      if (FA) {
         const r = await FA.signInWithGoogle({ skipNativeAuth: true });
         const idToken = r && r.credential && r.credential.idToken;
         if (!idToken) throw Object.assign(new Error('no token'), { code: 'app/no-google' });
@@ -37,7 +42,7 @@ export function createStore(cfg) {
       return signInWithPopup(auth, new GoogleAuthProvider());
     },
     signOut: async () => {
-      try { const FA = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.FirebaseAuthentication; if (FA) await FA.signOut(); } catch (e) {}
+      try { const FA = nativeAuth(); if (FA) await FA.signOut(); } catch (e) {}
       return signOut(auth);
     },
     // Permanently erase this person's journal and account. Re-checks who they are first.
@@ -47,9 +52,8 @@ export function createStore(cfg) {
       if (pid === 'password') {
         await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, password || ''));
       } else {
-        const native = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-        if (native) {
-          const FA = window.Capacitor.Plugins.FirebaseAuthentication;
+        const FA = nativeAuth();
+        if (FA) {
           const r = await FA.signInWithGoogle({ skipNativeAuth: true });
           await reauthenticateWithCredential(u, GoogleAuthProvider.credential(r.credential.idToken));
         } else await reauthenticateWithPopup(u, new GoogleAuthProvider());

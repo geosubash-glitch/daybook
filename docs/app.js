@@ -103,7 +103,7 @@ $('#siGoogle').addEventListener('click', async () => {
   catch (e) {
     const c = e && e.code || '', m = String(e && e.message || '');
     if (/popup-closed|cancel/i.test(c + m)) return;
-    $('#siErr').textContent = /network/.test(c) ? 'No connection.' : /popup-blocked/.test(c) ? 'Your browser blocked the Google window. Allow pop-ups for this page and try again.' : /unauthorized-domain/.test(c) ? 'This web address is not approved in Firebase yet.' : 'Google sign-in did not complete. Try again.';
+    $('#siErr').textContent = /network/.test(c) ? 'No connection.' : /popup-blocked/.test(c) ? 'Your browser blocked the Google window. Allow pop-ups for this page and try again.' : /unauthorized-domain/.test(c) ? 'This web address is not approved in Firebase yet.' : 'Google sign-in did not complete. ' + (String(e && (e.code || e.message) || '').slice(0, 90)) + ' Try again.';
   }
 });
 $('#siReset').addEventListener('click', async () => {
