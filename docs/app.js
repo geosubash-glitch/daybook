@@ -174,7 +174,6 @@ function afterEntriesChanged() {
   const ed = readEditor();
   const same = ed.body === (e.body || '') && ed.title === (e.title || '') && ed.photos.join(',') === (e.photos || []).join(',');
   if (!dirty && editable && !same) loadEditor();
-  $('#del').hidden = !hasContent(entries[cur]);
 }
 async function ensureMonth(y, m) {
   const a = y + '-' + pad(m + 1) + '-01', last = new Date(y, m + 1, 0).getDate();
@@ -355,7 +354,6 @@ function loadEditor() {
   undoInfo = null; $('#undo').hidden = true; lastFixed = ''; clearTimeout(fixTimer);
   renderPhotos(); autosize(); updateWc();
   setStatus(hasContent(e) ? 'saved' : '');
-  $('#del').hidden = !hasContent(e);
 }
 function touch() {
   if (!editable) return;
@@ -380,7 +378,6 @@ async function persist(e) {
   pending++;
   if (cur === e.date) setStatus(navigator.onLine ? 'Saving…' : 'Kept here, uploads when online');
   renderCal(); renderCount(); renderExport();
-  $('#del').hidden = !hasContent(entries[cur]);
   store.setEntry(e.date, data).then(() => {
     pending--;
     if (!pending && !dirty && cur === e.date) setStatus('saved');
@@ -811,24 +808,6 @@ $('#expSheets').addEventListener('click', () => runExport('sheets'));
 $('#expJson').addEventListener('click', runBackup);
 $('#impBtn').addEventListener('click', () => $('#impFile').click());
 $('#impFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) runRestore(f); });
-
-let delArmed = false, delTimer = null;
-const disarm = () => { delArmed = false; clearTimeout(delTimer); $('#del').classList.remove('armed'); };
-$('#del').addEventListener('click', async () => {
-  if (!hasContent(entries[cur])) return;
-  if (!delArmed) { delArmed = true; $('#del').classList.add('armed'); setStatus('Tap the bin again to delete'); delTimer = setTimeout(() => { disarm(); setStatus('saved'); }, 4000); return; }
-  disarm();
-  const k = cur, ids = (entries[k].photos || []).slice();
-  clearTimeout(timer); dirty = false;
-  try {
-    await writing;
-    store.deleteEntry(k).catch(() => setStatus('Not deleted online. Check your connection.'));
-    for (const id of ids) store.deletePhoto(id).catch(() => {});
-    entries[k] = null; if (totalCount) totalCount--;
-    if (cur === k) loadEditor();
-    renderAll(); setStatus('Entry deleted');
-  } catch (err) { setStatus('Could not delete. Check your connection and try again.'); }
-});
 
 const OFFLINE_MSG = 'You are offline. You can keep writing; it is kept on this device and uploads when you are back online.';
 function netState() {

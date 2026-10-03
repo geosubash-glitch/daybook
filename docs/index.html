@@ -100,7 +100,6 @@ select, input[type="date"], input[type="search"], input[type="password"], input[
 .foot .info { display: flex; align-items: center; gap: var(--s3); font-size: .8rem; color: var(--ink-2); min-width: 0; flex-wrap: wrap; }
 .foot .info .ic { width: 16px; height: 16px; }
 .foot .end { margin-left: auto; margin-right: calc(var(--s3) * -1); }
-.foot #del[hidden] { display: none; }
 
 /* panels: 16px padding around 12px controls gives a 28px corner */
 .panel { border: 1px solid var(--rule); padding: var(--s4); border-radius: calc(var(--r) + var(--s4)); display: grid; gap: var(--s3); }
@@ -424,7 +423,6 @@ input[type="search"] { width: 100%; }
       </div>
       <input type="file" id="scanFile" accept="image/*" hidden>
       <div class="info"><span id="wc">0 words</span><span id="status" role="status"></span></div>
-      <button class="ibtn danger end" id="del" type="button" aria-label="Delete this entry" title="Delete entry" hidden><svg class="ic"><use href="#i-trash"/></svg></button>
     </div>
   </main>
 </div>
