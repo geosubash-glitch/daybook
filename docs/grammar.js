@@ -29,19 +29,18 @@ async function check(text) {
   return (await r.json()).matches || [];
 }
 
-// For spelling mistakes, pick the suggestion closest to what was typed (ties go to the longer word,
-// so "realy" becomes "really", not "real").
-function dist(a, b) {
-  const m = a.length, n = b.length, d = Array.from({ length: m + 1 }, (_, i) => [i]);
-  for (let j = 1; j <= n; j++) d[0][j] = j;
-  for (let i = 1; i <= m; i++) for (let j = 1; j <= n; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-  return d[m][n];
-}
+// Use LanguageTool's first suggestion. One exception for spelling: when that suggestion only drops a
+// letter ("realy" to "real") and another suggestion keeps every typed letter ("really"), use that one.
+const isSub = (small, big) => { let i = 0; for (const ch of big) if (ch === small[i]) i++; return i === small.length; };
 function pick(orig, m) {
-  const reps = m.replacements.slice(0, 4).map((r) => r.value);
-  if (!(m.rule && m.rule.category && m.rule.category.id === 'TYPOS')) return reps[0];
+  const reps = m.replacements.slice(0, 4).map((r) => r.value), first = reps[0];
+  if (!(m.rule && m.rule.category && m.rule.category.id === 'TYPOS')) return first;
   const o = orig.toLowerCase();
-  return reps.map((v, i) => ({ v, i, d: dist(o, v.toLowerCase()) })).sort((a, b) => a.d - b.d || b.v.length - a.v.length || a.i - b.i)[0].v;
+  if (first.length < orig.length && isSub(first.toLowerCase(), o)) {
+    const keep = reps.slice(1).find((v) => isSub(o, v.toLowerCase()) && v.length - orig.length <= 2);
+    if (keep) return keep;
+  }
+  return first;
 }
 
 function apply(text, matches) {
