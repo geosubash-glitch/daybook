@@ -336,7 +336,17 @@ document.addEventListener('visibilitychange', () => {
 
 /* ---------- editor ---------- */
 function readEditor() { return { date: cur, title: $('#title').value.trim(), body: $('#body').value.replace(/\s+$/, ''), photos: photos.slice() }; }
-function autosize() { const ta = $('#body'); ta.style.height = 'auto'; ta.style.height = Math.max(320, ta.scrollHeight + 8) + 'px'; }
+// Grow the editor with its text. Collapsing to 'auto' shrinks the whole page for a moment, which
+// makes the browser clamp the scroll to the top (the jump seen while typing), so the scroll
+// position is restored in the same frame, before anything is painted.
+function autosize() {
+  const ta = $('#body');
+  const y = window.scrollY, x = window.scrollX;
+  ta.style.height = 'auto';
+  const h = Math.max(320, ta.scrollHeight + 8) + 'px';
+  if (ta.style.height !== h) ta.style.height = h;
+  if (window.scrollY !== y) window.scrollTo(x, y);
+}
 function updateWc() { const n = words($('#body').value); $('#wc').textContent = fmt(n) + (n === 1 ? ' word' : ' words'); }
 async function photoData(id) {
   if (photoCache[id] !== undefined) return photoCache[id];
