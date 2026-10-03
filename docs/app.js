@@ -1,5 +1,6 @@
 import { config } from './config.js';
 import { correct, fixError } from './grammar.js';
+import { isNative, haptic, onBack, reminderPrefs, setReminder } from './native.js';
 
 const $ = (s) => document.querySelector(s);
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -258,9 +259,30 @@ function closePanel() { resetDelete(); $('#lockPanel').hidden = true; $('#lockBt
 $('#lockBtn').addEventListener('click', () => {
   const p = $('#lockPanel'); p.hidden = !p.hidden;
   $('#lockBtn').setAttribute('aria-expanded', String(!p.hidden));
-  if (!p.hidden) { closeExport(); closeBrowse(); renderLockPanel(); }
+  if (!p.hidden) { closeExport(); closeBrowse(); renderLockPanel(); renderReminder(); }
 });
 $('#lpClose').addEventListener('click', closePanel);
+function renderReminder() {
+  $('#remSection').hidden = !isNative();
+  const r = reminderPrefs(); $('#remTime').value = r.time;
+  $('#remToggle').setAttribute('aria-pressed', String(r.on)); $('#remToggle').textContent = r.on ? 'On' : 'Turn on';
+}
+async function applyReminder(on) {
+  try { await setReminder(on, $('#remTime').value || '21:00'); haptic(); $('#lpMsg').textContent = on ? 'Reminder set for ' + $('#remTime').value + ' every day.' : 'Reminder turned off.'; }
+  catch (e) { $('#lpMsg').textContent = String(e && e.message || 'Could not set the reminder.'); }
+  renderReminder();
+}
+$('#remToggle').addEventListener('click', () => applyReminder(!reminderPrefs().on));
+$('#remTime').addEventListener('change', () => { if (reminderPrefs().on) applyReminder(true); });
+// Android back button: close whatever is open first, then go back to today, then leave the app.
+onBack(() => {
+  if (!$('#lightbox').hidden) { closeLightbox(); return true; }
+  if (!$('#lockPanel').hidden) { closePanel(); return true; }
+  if (!$('#exportPanel').hidden) { closeExport(); return true; }
+  if (!$('#browse').hidden) { closeBrowse(); return true; }
+  if (!$('#shell').hidden && cur !== todayKey()) { goto(todayKey()); return true; }
+  return false;
+});
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (!$('#lockPanel').hidden) closePanel(); else if (!$('#exportPanel').hidden) closeExport(); else if (!$('#browse').hidden) closeBrowse();
@@ -630,7 +652,7 @@ async function fixNow() {
     if (b.value !== src) setStatus('You kept typing. Press correct again.');
     else if (out === null) setStatus('Could not correct that safely. Nothing changed.');
     else if (out === core) setStatus('No mistakes found');
-    else { const neu = wrapKeep(src, out); b.value = neu; showUndo({ before: src, after: neu }); lastFixed = ''; autosize(); updateWc(); touch(); }
+    else { haptic('success'); const neu = wrapKeep(src, out); b.value = neu; showUndo({ before: src, after: neu }); lastFixed = ''; autosize(); updateWc(); touch(); }
   } catch (e) { setStatus(fixError(e)); }
   fixBusy = false; $('#fix').disabled = false;
 }
@@ -700,8 +722,8 @@ $('#browseBtn').addEventListener('click', () => {
   $('#browseBtn').setAttribute('aria-expanded', String(!b.hidden));
   if (!b.hidden) { closeExport(); closePanel(); refreshMeta(); }
 });
-$('#prev').addEventListener('click', () => shift(-1));
-$('#next').addEventListener('click', () => shift(1));
+$('#prev').addEventListener('click', () => { haptic(); shift(-1); });
+$('#next').addEventListener('click', () => { haptic(); shift(1); });
 $('#today').addEventListener('click', () => goto(todayKey()));
 $('#mPrev').addEventListener('click', () => { calM.m--; if (calM.m < 0) { calM.m = 11; calM.y--; } renderCal(); });
 $('#mNext').addEventListener('click', () => { calM.m++; if (calM.m > 11) { calM.m = 0; calM.y++; } renderCal(); });

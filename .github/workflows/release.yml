@@ -21,7 +21,7 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
       - name: Install Capacitor
-        run: npm install --no-audit --no-fund @capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor-firebase/authentication@8 firebase@12 @capacitor/filesystem@8 @capacitor/share@8
+        run: npm install --no-audit --no-fund @capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor-firebase/authentication@8 firebase@12 @capacitor/filesystem@8 @capacitor/share@8 @capacitor/local-notifications@8 @capacitor/app@8 @capacitor/haptics@8
       - name: Configure the app
         run: |
           cat > capacitor.config.json <<JSON
@@ -31,7 +31,7 @@ jobs:
             "webDir": "docs",
             "server": { "androidScheme": "https" },
             "android": { "backgroundColor": "#FBFBFA" },
-            "plugins": { "FirebaseAuthentication": { "skipNativeAuth": true, "providers": ["google.com"] } }
+            "plugins": { "FirebaseAuthentication": { "skipNativeAuth": true, "providers": ["google.com"] }, "LocalNotifications": { "smallIcon": "ic_stat_daybook", "iconColor": "#0F0F10" } }
           }
           JSON
       - name: Create the Android project
@@ -39,6 +39,8 @@ jobs:
           npx cap add android
           cp signing/google-services.json android/app/google-services.json
           cp -r android-res/. android/app/src/main/res/
+          cp -r android-native/java/. android/app/src/main/java/
+          python3 android-native/patch_manifest.py
           sed -i 's#@drawable/splash#@color/ic_launcher_background#' android/app/src/main/res/values/styles.xml
           grep -q "targetSdkVersion = 36" android/variables.gradle || (echo "Target SDK is not 36" && exit 1)
           npx cap sync android

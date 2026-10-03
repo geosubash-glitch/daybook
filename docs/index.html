@@ -185,6 +185,16 @@ input[type="search"] { width: 100%; }
 .btn.danger:hover:not(:disabled) { background: var(--danger); color: var(--bg); }
 .btn.danger.solid { background: var(--danger); color: var(--bg); }
 .legal a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+/* motion: sheets slide up, drawers fade in, buttons respond to touch */
+@keyframes sheetIn { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.lockpanel:not([hidden]) { animation: sheetIn .26s cubic-bezier(.2,.8,.2,1); }
+.browse:not([hidden]) { animation: fadeIn .2s ease-out; }
+.ibtn, .btn, .chip, .choice { transition: transform .12s ease, background-color .15s ease, opacity .15s ease; -webkit-tap-highlight-color: transparent; }
+.ibtn:active:not(:disabled), .btn:active:not(:disabled), .chip:active, .choice:active:not(:disabled) { transform: scale(.96); }
+input[type="time"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3); height: 44px; font: inherit; color: inherit; }
+#remToggle[aria-pressed="true"] { background: var(--ink); color: var(--ink-on); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 .lockerr { color: var(--danger); min-height: 1.2em; font-size: .88rem; }
 </style>
 </head>
@@ -327,6 +337,11 @@ input[type="search"] { width: 100%; }
         <div class="row"><button class="btn" id="lockNow" type="button">Lock now</button></div>
         <div class="row"><input type="password" id="offPin" autocomplete="off" placeholder="Current passcode" aria-label="Current passcode"><button class="btn" id="lpTurnOff" type="button">Turn off</button></div>
       </div>
+    </div>
+    <div class="section" id="remSection" hidden>
+      <h2>Daily reminder</h2>
+      <p class="fine">A gentle notification at the time you choose, so a day does not slip by unwritten.</p>
+      <div class="row"><input type="time" id="remTime" value="21:00" aria-label="Reminder time"><button class="btn" id="remToggle" type="button" aria-pressed="false">Turn on</button></div>
     </div>
     <div class="section">
       <h2>Your data</h2>

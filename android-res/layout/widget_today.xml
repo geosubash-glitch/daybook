@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@android:id/background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical"
+    android:padding="18dp"
+    android:background="@drawable/widget_bg">
+    <TextView android:id="@+id/w_weekday" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="SUNDAY" android:textColor="#9A978F" android:textSize="11sp" android:letterSpacing="0.18"
+        android:fontFamily="sans-serif-medium" />
+    <TextView android:id="@+id/w_date" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="4 October" android:textColor="#F2EFE8" android:textSize="28sp" android:fontFamily="serif"
+        android:layout_marginTop="2dp" android:maxLines="1" />
+    <TextView android:id="@+id/w_year" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:text="2026" android:textColor="#9A978F" android:textSize="13sp" android:fontFamily="serif" />
+</LinearLayout>
