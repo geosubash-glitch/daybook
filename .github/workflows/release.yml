@@ -1,0 +1,62 @@
+# Builds the signed bundle (.aab) that Google Play requires.
+# Runs only when you start it by hand from the Actions tab, and only after the four secrets below exist.
+# See PUBLISHING.md, step 3.
+name: Build Play Store bundle
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bundle:
+    runs-on: ubuntu-latest
+    env:
+      KEYSTORE_B64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+    steps:
+      - name: Check the signing secrets exist
+        run: |
+          [ -n "$KEYSTORE_B64" ] || (echo "Add the UPLOAD_KEYSTORE_BASE64, UPLOAD_KEYSTORE_PASSWORD, UPLOAD_KEY_ALIAS and UPLOAD_KEY_PASSWORD secrets first. See PUBLISHING.md." && exit 1)
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - name: Install Capacitor
+        run: npm install --no-audit --no-fund @capacitor/core@8 @capacitor/cli@8 @capacitor/android@8 @capacitor-firebase/authentication@8 firebase@12
+      - name: Configure the app
+        run: |
+          cat > capacitor.config.json <<JSON
+          {
+            "appId": "app.daybook.journal",
+            "appName": "Daybook",
+            "webDir": "docs",
+            "server": { "androidScheme": "https" },
+            "android": { "backgroundColor": "#FBFBFA" },
+            "plugins": { "FirebaseAuthentication": { "skipNativeAuth": true, "providers": ["google.com"] } }
+          }
+          JSON
+      - name: Create the Android project
+        run: |
+          npx cap add android
+          cp signing/google-services.json android/app/google-services.json
+          sed -i 's#<application#<uses-permission android:name="android.permission.CAMERA" />\n    <application#' android/app/src/main/AndroidManifest.xml
+          cp -r android-res/. android/app/src/main/res/
+          sed -i 's#@drawable/splash#@color/ic_launcher_background#' android/app/src/main/res/values/styles.xml
+          grep -q "targetSdkVersion = 36" android/variables.gradle || (echo "Target SDK is not 36" && exit 1)
+          npx cap sync android
+      - name: Build and sign
+        working-directory: android
+        env:
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+          ./gradlew bundleRelease --no-daemon \
+            -Pandroid.injected.signing.store.file="$RUNNER_TEMP/upload.keystore" \
+            -Pandroid.injected.signing.store.password="$UPLOAD_KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$UPLOAD_KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$UPLOAD_KEY_PASSWORD"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Daybook-play-bundle
+          path: android/app/build/outputs/bundle/release/app-release.aab
