@@ -40,7 +40,6 @@ jobs:
         run: |
           npx cap add android
           cp signing/google-services.json android/app/google-services.json
-          sed -i 's#<application#<uses-permission android:name="android.permission.CAMERA" />\n    <application#' android/app/src/main/AndroidManifest.xml
           cp -r android-res/. android/app/src/main/res/
           echo "--- build targets"; grep -rn "targetSdkVersion\|compileSdkVersion\|minSdkVersion" android/variables.gradle
           grep -q "targetSdkVersion = 36" android/variables.gradle || (echo "Target SDK is not 36, Google Play would reject this build" && exit 1)

@@ -52,7 +52,7 @@ Already in place: owner-only database rules with size and shape checks on everyt
 Do these as the app grows:
 - **App Check** (Firebase console, then App Check): turn on Play Integrity for Android and reCAPTCHA for the web, then enforce it for Firestore. Stops other programs from using your database quota.
 - **Restrict the web API key** (Google Cloud console, then APIs and Services, then Credentials): limit it to the Firebase and Identity Toolkit APIs, and to the website `geosubash-glitch.github.io` plus the Android app. Check sign-in still works after each change.
-- **Free plan limits** (Firestore Spark): 1 GiB stored, 50,000 reads and 20,000 writes a day, for all users together. Scanned photos use the most space. If many people join, move to the Blaze plan **and set a budget alert** (Billing, then Budgets) before you do.
+- **Free plan limits** (Firestore Spark): 1 GiB stored, 50,000 reads and 20,000 writes a day, for all users together. If many people join, move to the Blaze plan **and set a budget alert** (Billing, then Budgets) before you do.
 - **Backups**: Firestore, then Disaster Recovery, to schedule automatic backups once you are on Blaze.
 - **Updates**: the Android target level rises every year in August. Change the Capacitor version in the workflows and rebuild.
 

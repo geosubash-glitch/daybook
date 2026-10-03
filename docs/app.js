@@ -33,7 +33,6 @@ let dirty = false, timer = null, writing = Promise.resolve();
 let loaded = false, editable = false, started = false, unwatch = null, navToken = 0;
 let lockData = null, prefs = {}, hiddenAt = 0, failCount = 0, blockedUntil = 0;
 let totalCount = null, firstDate = null, allLoaded = false;
-let scanToken = 0, scanFile = null;
 let pending = 0;
 let autoFix = false, fixBusy = false, fixTimer = null, undoInfo = null, lastFixed = '';
 
@@ -83,7 +82,7 @@ function teardown() {
   loaded = editable = started = dirty = allLoaded = false;
   lockData = null; prefs = {}; totalCount = null; firstDate = null; undoInfo = null;
   $('#body').value = ''; $('#title').value = ''; $('#results').textContent = ''; $('#q').value = '';
-  $('#lockPanel').hidden = true; $('#browse').hidden = true; $('#exportPanel').hidden = true; closeScan();
+  $('#lockPanel').hidden = true; $('#browse').hidden = true; $('#exportPanel').hidden = true;
   $('#siPass').value = '';
 }
 $('#signinForm').addEventListener('submit', async (ev) => {
@@ -214,7 +213,7 @@ function showLock() {
 function hideLock() { gate('#shell'); start(); }
 async function lockNow() {
   if (!lockData || !started) return;
-  await flush(); closeScan(); closeLightbox();
+  await flush(); closeLightbox();
   closePanel(); showLock();
 }
 $('#lockForm').addEventListener('submit', async (ev) => {
@@ -388,7 +387,6 @@ async function goto(k, fromBrowse) {
   if (!isDate(k) || !loaded) return;
   if (k > todayKey()) k = todayKey();
   await flush();
-  closeScan();
   cur = k;
   const d = parseKey(k); calM = { y: d.getFullYear(), m: d.getMonth() };
   const my = ++navToken;
@@ -632,51 +630,6 @@ async function runRestore(file) {
   } catch (e) { setMsg('That file could not be read as a Daybook backup.'); }
 }
 
-/* ---------- scan a handwritten page ---------- */
-function closeScan() {
-  scanToken++; scanFile = null;
-  $('#scan').hidden = true; $('#scanText').hidden = true; $('#scanAdd').hidden = true;
-}
-async function packPhoto(file) {
-  const tries = [[1400, 0.72], [1400, 0.6], [1200, 0.5], [1000, 0.4]];
-  let out = '';
-  for (const t of tries) { out = await ai.shrink(file, t[0], t[1]); if (out.length < 800000) break; }
-  return out;
-}
-async function startScan(file) {
-  if (!file) return;
-  if (!prefs.geminiKey) { setStatus(ai.aiError({ code: 'no_key' })); return; }
-  scanFile = file;
-  const my = ++scanToken;
-  $('#scan').hidden = false; $('#scanTitle').textContent = 'Reading your page…';
-  $('#scanText').hidden = true; $('#scanAdd').hidden = true; $('#scanText').value = '';
-  $('#scanCancel').textContent = 'Stop';
-  try {
-    const url = await ai.shrink(file, 2000, 0.85);
-    const r = await ai.transcribe(prefs, url.split(',')[1], 'image/jpeg');
-    if (my !== scanToken) return;
-    if (!r.text.trim()) { $('#scanTitle').textContent = 'No text was found in that photo.'; $('#scanCancel').textContent = 'Close'; return; }
-    $('#scanText').hidden = false; $('#scanText').value = r.text;
-    $('#scanTitle').textContent = 'Check the text, fix anything, then add it';
-    $('#scanAdd').hidden = false; $('#scanCancel').textContent = 'Cancel';
-    $('#keepWrap').hidden = false;
-  } catch (e) {
-    if (my !== scanToken) return;
-    $('#scanTitle').textContent = e && e.message === 'image' ? 'That image could not be read. Try a clearer photo.' : ai.aiError(e);
-    $('#scanCancel').textContent = 'Close';
-  }
-}
-async function addScan() {
-  const txt = $('#scanText').value.replace(/\s+$/, ''), body = $('#body'), file = scanFile, keep = $('#keep').checked;
-  if (txt) body.value = body.value.replace(/\s+$/, '') + (body.value.trim() ? '\n\n' : '') + txt + '\n';
-  if (file && keep) {
-    try {
-      const id = rnd(), data = await packPhoto(file);
-      store.addPhoto(id, data, cur).catch(() => {}); photoCache[id] = data; photos.push(id); renderPhotos();
-    } catch (e) { setStatus('The text was added, but the photo could not be kept.'); }
-  }
-  closeScan(); autosize(); updateWc(); touch();
-}
 
 /* ---------- spelling and grammar ---------- */
 function setAutoUi() {
@@ -763,14 +716,6 @@ $('#stamp').addEventListener('click', () => {
   b.focus(); b.setSelectionRange(b.value.length, b.value.length);
   autosize(); updateWc(); touch();
 });
-$('#scanBtn').addEventListener('click', () => {
-  if (!editable) return;
-  if (!prefs.geminiKey) { setStatus(ai.aiError({ code: 'no_key' })); return; }
-  $('#scanFile').click();
-});
-$('#scanFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) startScan(f); });
-$('#scanAdd').addEventListener('click', addScan);
-$('#scanCancel').addEventListener('click', closeScan);
 $('#photos').addEventListener('click', (ev) => {
   const b = ev.target.closest('button[data-id]'); if (!b) return;
   const id = b.dataset.id;
