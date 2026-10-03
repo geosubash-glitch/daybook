@@ -539,7 +539,7 @@ async function renderExport() {
   if (my !== exportToken) return;
   exportCount = n;
   $('#rangeInfo').textContent = n < 0 ? 'The count needs a connection.' : n + (n === 1 ? ' entry' : ' entries') + ' in this range';
-  ['#expPrint', '#expTxt'].forEach((s) => { $(s).disabled = n === 0; });
+  ['#expPrint', '#expSheets', '#expTxt'].forEach((s) => { $(s).disabled = n === 0; });
 }
 // Saving a file. In the Android app the file is written to the phone and the share menu opens,
 // so it can go to Files, Drive, a printer or a chat. On the web it downloads as usual.
@@ -580,13 +580,17 @@ async function runExport(kind) {
     const label = rangeLabel(list);
     if (!navigator.onLine) setMsg('Offline: this only includes entries stored on this device.');
     const base = 'daybook-' + slug();
-    if (kind === 'print') {
+    if (kind === 'print' || kind === 'sheets') {
+      const booklet = kind === 'print';
       setMsg('Making your PDF…');
       const { makeJournalPdf } = await import('./pdf.js');
-      const doc = await makeJournalPdf(list, { label, photo: photoData, onProgress: (i, n) => setMsg('Laying out day ' + i + ' of ' + n + '…') });
+      const doc = await makeJournalPdf(list, { label, mode: booklet ? 'booklet' : 'sheets', photo: photoData, onProgress: (i, n) => setMsg('Laying out day ' + i + ' of ' + n + '…') });
       const b64 = doc.output('datauristring').split(',')[1];
-      const how = await saveFile(base + '.pdf', { base64: b64 }, 'application/pdf');
-      setMsg(how === 'shared' ? 'Your PDF is ready.' : 'Saved ' + base + '.pdf. Open it to print: A4, landscape.');
+      const name = base + (booklet ? '-book' : '-sheets') + '.pdf', info = doc.__info;
+      const how = await saveFile(name, { base64: b64 }, 'application/pdf');
+      setMsg((how === 'shared' ? 'Your PDF is ready. ' : 'Saved ' + name + '. ') + (booklet
+        ? 'To print: A4, actual size, both sides, flip on the short edge. ' + info.sheets + (info.sheets === 1 ? ' sheet' : ' sheets') + (info.booklets > 1 ? ', in ' + info.booklets + ' booklets of up to 8 sheets: fold each one and stack them in order.' : ': fold the stack in half.')
+        : 'To print: A4, actual size, one side. Cut each sheet down the middle.'));
     } else {
       const how = await saveFile(base + '.txt', plainText(list), 'text/plain');
       setMsg(how === 'shared' ? 'Your text file is ready.' : 'Saved ' + base + '.txt');
@@ -803,6 +807,7 @@ $('#exportBtn').addEventListener('click', () => {
   if (!p.hidden) { closePanel(); closeBrowse(); setMsg(''); renderExport(); }
 });
 $('#expTxt').addEventListener('click', () => runExport('text'));
+$('#expSheets').addEventListener('click', () => runExport('sheets'));
 $('#expJson').addEventListener('click', runBackup);
 $('#impBtn').addEventListener('click', () => $('#impFile').click());
 $('#impFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) runRestore(f); });
