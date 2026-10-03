@@ -26,7 +26,7 @@ import org.json.JSONObject;
  * The app keeps the list of written days in its local storage; the widget only reads it.
  */
 public class TodayWidget extends AppWidgetProvider {
-    private static final int INK = 0xFFF2EFE8, SOFT = 0xFF9A978F, MISSED = 0xFF3A3936, FUTURE = 0xFF222224;
+    private static final int INK = 0xFFF2EFE8, SOFT = 0xFFC9C6BE, MISSED = 0x99F2EFE8, FUTURE = 0x40F2EFE8;
 
     public static void refreshAll(Context ctx) {
         AppWidgetManager m = AppWidgetManager.getInstance(ctx);
