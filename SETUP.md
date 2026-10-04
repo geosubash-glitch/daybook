@@ -50,8 +50,8 @@ open the website in Chrome on your phone and choose **Install app** (or Add to H
 
 ## 4. Use it
 
-- Settings (the sliders icon): set a **passcode** and a recovery word. Grammar fixing needs no setup.
-  (https://aistudio.google.com/apikey) to switch on scanning handwritten pages and fixing spelling and grammar.
+- Settings (the sliders icon): set a **passcode** and a recovery word. Grammar fixing needs no setup; it sends the
+  text you fix to the public LanguageTool service (https://languagetool.org), so leave it off for anything very private.
 - Print or PDF: pick the time span; the sheet is A4 landscape with two days per sheet, one day per A5 page.
 - Plain text saves only your writing with its dates.
 - **Full backup** saves every entry and photo into one file. Do it once a month and keep it in two places.
@@ -63,9 +63,8 @@ open the website in Chrome on your phone and choose **Install app** (or Add to H
 - The passcode is a screen lock. Your entries are protected by your sign-in and the rules, but they are not
   end-to-end encrypted, so Google's systems can technically store and read them as with any Firebase app.
 - Offline: writing is kept on the device and uploads on its own. Do not clear the app's data or uninstall it while
-  it still says it is waiting to upload. Scanning, settings, backups and restoring need internet.
+  it still says it is waiting to upload. Settings, backups and restoring need internet.
 - The free Firebase plan (Spark) is far above what a journal needs: 1 GiB storage and tens of thousands of reads and
   writes a day. Photos are shrunk before saving so they stay small.
-- Google changes AI model names now and then. If scanning stops working, change the model name in Settings.
 - Everything is plain files: `docs/` is the whole app. `docs/store-firebase.js` is the only file that talks to
   Firebase, so the storage can be moved to another service someday without rewriting the app.
