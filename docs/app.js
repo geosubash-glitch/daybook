@@ -1,6 +1,6 @@
 import { config } from './config.js';
 import { correct, fixError } from './grammar.js';
-import { isNative, haptic, onBack, reminderPrefs, setReminder, setWidgetDays, clearWidget } from './native.js';
+import { isNative, haptic, onBack, reminderPrefs, setReminder, saveQuiet, initNotificationActions, bioAvailable, bioAuth, setRecentsPrivacy, devicePrefs, saveDevicePrefs, setWidgetDays, clearWidget } from './native.js';
 
 const $ = (s) => document.querySelector(s);
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -93,7 +93,7 @@ async function onAuth(user) {
     $('#siErr').textContent = 'Signed in, but the journal could not be reached. Check your connection and that the Firestore rules were published.';
     return;
   }
-  autoFix = !!prefs.autoFix && !!prefs.grammarOk; setAutoUi();
+  autoFix = !!prefs.autoFix && grammarOk(); setAutoUi();
   if (lockData && lockData.hash && hasCrypto) showLock(); else start();
 }
 function teardown() {
@@ -249,7 +249,17 @@ function showLock() {
   $('#lockForm').hidden = false; $('#recForm').hidden = true;
   $('#lockPin').value = ''; $('#lockErr').textContent = '';
   setTimeout(() => $('#lockPin').focus(), 50);
+  tryBio(true);
 }
+async function bioReady() { return isNative() && devicePrefs().bio && await bioAvailable(); }
+async function tryBio(auto) {
+  const btn = $('#lockBio');
+  if (!(await bioReady())) { btn.hidden = true; return; }
+  btn.hidden = false;
+  if (auto === false || auto === true) { /* prompt below */ }
+  if (await bioAuth('Unlock Daybook')) { failCount = 0; $('#lockPin').value = ''; hideLock(); }
+}
+$('#lockBio').addEventListener('click', () => tryBio(false));
 function hideLock() { gate('#shell'); start(); }
 async function lockNow() {
   if (!lockData || !started) return;
@@ -298,12 +308,31 @@ function closePanel() { resetDelete(); $('#lockPanel').hidden = true; $('#lockBt
 $('#lockBtn').addEventListener('click', () => {
   const p = $('#lockPanel'); p.hidden = !p.hidden;
   $('#lockBtn').setAttribute('aria-expanded', String(!p.hidden));
-  if (!p.hidden) { closeExport(); closeBrowse(); renderLockPanel(); renderReminder(); }
+  if (!p.hidden) { closeExport(); closeBrowse(); renderLockPanel(); renderReminder(); renderDevice(); }
 });
 $('#lpClose').addEventListener('click', closePanel);
+async function renderDevice() {
+  const d = devicePrefs();
+  $('#lockAfter').value = String(d.lockAfter);
+  $('#privSection').hidden = !isNative();
+  $('#recToggle').setAttribute('aria-pressed', String(d.recents)); $('#recToggle').textContent = d.recents ? 'Hidden in recent apps' : 'Shown in recent apps';
+  const bio = isNative() && await bioAvailable();
+  $('#bioRow').hidden = !bio;
+  $('#bioToggle').setAttribute('aria-pressed', String(d.bio && bio)); $('#bioToggle').textContent = d.bio && bio ? 'Fingerprint on' : 'Use fingerprint';
+}
+$('#lockAfter').addEventListener('change', () => { const d = devicePrefs(); d.lockAfter = Number($('#lockAfter').value); saveDevicePrefs(d); $('#lpMsg').textContent = 'Saved.'; });
+$('#recToggle').addEventListener('click', () => { const d = devicePrefs(); d.recents = !d.recents; saveDevicePrefs(d); setRecentsPrivacy(d.recents); renderDevice(); });
+$('#bioToggle').addEventListener('click', async () => {
+  const d = devicePrefs();
+  if (!d.bio) { if (!(await bioAuth('Turn on fingerprint unlock'))) { $('#lpMsg').textContent = 'Fingerprint was not confirmed.'; return; } }
+  d.bio = !d.bio; saveDevicePrefs(d); renderDevice();
+});
+if (isNative()) { setRecentsPrivacy(devicePrefs().recents); initNotificationActions(); }
 function renderReminder() {
   $('#remSection').hidden = !isNative();
   const r = reminderPrefs(); $('#remTime').value = r.time;
+  $('#quietFrom').value = r.quiet.from; $('#quietTo').value = r.quiet.to;
+  $('#quietToggle').setAttribute('aria-pressed', String(r.quiet.on)); $('#quietToggle').textContent = r.quiet.on ? 'On' : 'Off';
   $('#remToggle').setAttribute('aria-pressed', String(r.on)); $('#remToggle').textContent = r.on ? 'On' : 'Turn on';
 }
 async function applyReminder(on) {
@@ -312,6 +341,13 @@ async function applyReminder(on) {
   renderReminder();
 }
 $('#remToggle').addEventListener('click', () => applyReminder(!reminderPrefs().on));
+function quietChanged(patch) {
+  const q = Object.assign({}, reminderPrefs().quiet, patch); saveQuiet(q); renderReminder();
+  if (reminderPrefs().on) applyReminder(true);
+}
+$('#quietToggle').addEventListener('click', () => quietChanged({ on: !reminderPrefs().quiet.on }));
+$('#quietFrom').addEventListener('change', () => quietChanged({ from: $('#quietFrom').value || '22:00' }));
+$('#quietTo').addEventListener('change', () => quietChanged({ to: $('#quietTo').value || '07:00' }));
 $('#remTime').addEventListener('change', () => { if (reminderPrefs().on) applyReminder(true); });
 // Android back button: close whatever is open first, then go back to today, then leave the app.
 onBack(() => {
@@ -351,7 +387,7 @@ $('#lpTurnOff').addEventListener('click', async () => {
 });
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') { hiddenAt = Date.now(); flush(); }
-  else if (lockData && hasCrypto && hiddenAt && Date.now() - hiddenAt > 120000) { lockNow(); }
+  else if (lockData && hasCrypto && hiddenAt) { const la = devicePrefs().lockAfter; if (la >= 0 && Date.now() - hiddenAt >= la * 1000) lockNow(); }
 });
 
 /* ---------- editor ---------- */
@@ -693,13 +729,15 @@ async function fixText(core) {
 }
 const wrapKeep = (src, out) => src.match(/^\s*/)[0] + out + src.match(/\s*$/)[0];
 function showUndo(info) { undoInfo = info; $('#undo').hidden = !info; }
+const grammarOk = () => { try { return localStorage.getItem('daybook.grammarOk') === '1'; } catch (e) { return false; } };
+const setGrammarOk = () => { try { localStorage.setItem('daybook.grammarOk', '1'); } catch (e) {} };
 function askGrammarConsent() {
-  if (prefs.grammarOk) return Promise.resolve(true);
+  if (grammarOk()) return Promise.resolve(true);
   const d = $('#gramConsent');
-  if (!d.showModal) return Promise.resolve(window.confirm('Grammar correction sends the text you correct to LanguageTool, a public service. Continue?') && (prefs.grammarOk = true, store.setSetting('prefs', prefs).catch(() => {}), true));
+  if (!d.showModal) return Promise.resolve(window.confirm('Grammar correction sends the text you correct to LanguageTool, a public service. Continue?') && (setGrammarOk(), true));
   return new Promise((res) => {
     const done = (ok) => { d.close(); d.removeEventListener('cancel', no); $('#gcYes').onclick = $('#gcNo').onclick = null;
-      if (ok) { prefs.grammarOk = true; store.setSetting('prefs', prefs).catch(() => {}); } res(ok); };
+      if (ok) setGrammarOk(); res(ok); };
     const no = (ev) => { if (ev) ev.preventDefault(); done(false); };
     $('#gcYes').onclick = () => done(true); $('#gcNo').onclick = () => no();
     d.addEventListener('cancel', no); d.showModal();

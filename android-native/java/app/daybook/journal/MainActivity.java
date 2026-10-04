@@ -11,6 +11,7 @@ import com.getcapacitor.BridgeActivity;
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(DaybookNative.class);
         super.onCreate(savedInstanceState);
         // Let the page run under a camera notch instead of leaving a black band.
         if (Build.VERSION.SDK_INT >= 28) {

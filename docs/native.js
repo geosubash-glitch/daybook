@@ -15,23 +15,70 @@ export function onBack(handler) {
   c.addListener('App', 'backButton', () => { if (!handler()) call('App', 'minimizeApp').catch(() => {}); });
 }
 
-// Daily reminder notification, kept on this phone only.
-const KEY = 'daybook.reminder', ID = 4100;
-export function reminderPrefs() { try { return JSON.parse(localStorage.getItem(KEY)) || { on: false, time: '21:00' }; } catch (e) { return { on: false, time: '21:00' }; } }
+// ---- Privacy helpers (fingerprint unlock, recent-apps screen) ----
+export const bioAvailable = () => call('DaybookNative', 'biometricAvailable').then((r) => !!(r && r.available)).catch(() => false);
+export const bioAuth = (title) => call('DaybookNative', 'biometricAuth', { title: title || 'Unlock Daybook' }).then(() => true).catch(() => false);
+export const setRecentsPrivacy = (on) => call('DaybookNative', 'setRecentsPrivacy', { on: !!on }).catch(() => {});
+
+// Settings that belong to this phone only (not synced): when to lock, fingerprint, recent-apps privacy.
+const DKEY = 'daybook.device';
+const DDEF = { lockAfter: 120, bio: false, recents: true };
+export function devicePrefs() { try { return Object.assign({}, DDEF, JSON.parse(localStorage.getItem(DKEY))); } catch (e) { return Object.assign({}, DDEF); } }
+export function saveDevicePrefs(p) { try { localStorage.setItem(DKEY, JSON.stringify(p)); } catch (e) {} }
+
+// ---- Daily reminder notification, kept on this phone only. The text is always generic: it never shows journal content. ----
+const KEY = 'daybook.reminder', ID = 4100, SNOOZE_ID = 4101;
+const QDEF = { on: false, from: '22:00', to: '07:00' };
+export function reminderPrefs() {
+  let r = {}; try { r = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) {}
+  return { on: !!r.on, time: r.time || '21:00', quiet: Object.assign({}, QDEF, r.quiet) };
+}
+function saveReminder(r) { try { localStorage.setItem(KEY, JSON.stringify(r)); } catch (e) {} }
+const toMin = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
+export function inQuiet(minutes, q) {
+  if (!q || !q.on) return false;
+  const f = toMin(q.from), t = toMin(q.to);
+  return f === t ? false : f < t ? minutes >= f && minutes < t : minutes >= f || minutes < t;
+}
+export function saveQuiet(q) { const r = reminderPrefs(); r.quiet = Object.assign({}, QDEF, q); saveReminder(r); }
+const LN = (m, o) => call('LocalNotifications', m, o);
+async function allowed() {
+  let p = await LN('checkPermissions');
+  if (!p || p.display !== 'granted') p = await LN('requestPermissions');
+  return !!p && p.display === 'granted';
+}
+const ACTIONS = { id: 'REMINDER', actions: [{ id: 'snooze', title: 'Snooze 1 hour' }, { id: 'dismiss', title: 'Dismiss', destructive: true }] };
+const GENERIC = { title: 'Daybook', body: 'A few lines about today?', actionTypeId: 'REMINDER', smallIcon: 'ic_stat_daybook', iconColor: '#0F0F10' };
+
+// Snooze and Dismiss buttons on the notification. A snooze never lands inside quiet hours.
+export function initNotificationActions() {
+  const c = C(); if (!c || typeof c.addListener !== 'function') return;
+  LN('registerActionTypes', { types: [ACTIONS] }).catch(() => {});
+  c.addListener('LocalNotifications', 'localNotificationActionPerformed', async (ev) => {
+    const id = ev && ev.actionId;
+    if (id === 'dismiss') { LN('cancel', { notifications: [{ id: SNOOZE_ID }] }).catch(() => {}); return; }
+    if (id !== 'snooze') return;
+    const q = reminderPrefs().quiet;
+    let at = new Date(Date.now() + 3600000);
+    if (inQuiet(at.getHours() * 60 + at.getMinutes(), q)) {
+      const [h, m] = q.to.split(':').map(Number);
+      at.setHours(h, m, 0, 0); if (at.getTime() <= Date.now()) at.setDate(at.getDate() + 1);
+    }
+    LN('schedule', { notifications: [Object.assign({ id: SNOOZE_ID, schedule: { at, allowWhileIdle: true } }, GENERIC)] }).catch(() => {});
+  });
+}
+
 export async function setReminder(on, time) {
   if (!C()) throw new Error('Reminders work in the Android app.');
-  await call('LocalNotifications', 'cancel', { notifications: [{ id: ID }] }).catch(() => {});
+  const prev = reminderPrefs();
+  await LN('cancel', { notifications: [{ id: ID }, { id: SNOOZE_ID }] }).catch(() => {});
   if (on) {
-    let p = await call('LocalNotifications', 'checkPermissions');
-    if (!p || p.display !== 'granted') p = await call('LocalNotifications', 'requestPermissions');
-    if (!p || p.display !== 'granted') throw new Error('Notifications are turned off for Daybook. Allow them in Android settings.');
+    if (inQuiet(toMin(time), prev.quiet)) throw new Error('That time is inside your quiet hours. Pick another time or change the quiet hours.');
+    if (!(await allowed())) throw new Error('Notifications are turned off for Daybook. Allow them in Android settings.');
     const [hour, minute] = time.split(':').map(Number);
-    await call('LocalNotifications', 'schedule', { notifications: [{
-      id: ID, title: 'Daybook', body: 'A few lines about today?',
-      schedule: { on: { hour, minute }, allowWhileIdle: false }, smallIcon: 'ic_stat_daybook', iconColor: '#0F0F10'
-    }] });
+    await LN('schedule', { notifications: [Object.assign({ id: ID, schedule: { on: { hour, minute }, allowWhileIdle: false } }, GENERIC)] });
   }
-  try { localStorage.setItem(KEY, JSON.stringify({ on, time })); } catch (e) {}
+  saveReminder({ on, time, quiet: prev.quiet });
 }
 
 // Data for the home-screen widget: the dates you have written on (about the last 400 days).

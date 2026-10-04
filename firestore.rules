@@ -52,9 +52,7 @@ service cloud.firestore {
             (name == 'lock' && fields(['salt', 'hash', 'rhash']) && hasAll(['salt', 'hash', 'rhash'])
               && text('salt', 200) && text('hash', 200) && text('rhash', 200))
             ||
-            (name == 'prefs' && fields(['geminiKey', 'model', 'autoFix'])
-              && (!('geminiKey' in request.resource.data) || text('geminiKey', 400))
-              && (!('model' in request.resource.data) || text('model', 100))
+            (name == 'prefs' && fields(['autoFix'])
               && (!('autoFix' in request.resource.data) || request.resource.data.autoFix is bool))
           );
       }

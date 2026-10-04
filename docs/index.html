@@ -117,6 +117,7 @@ select, input[type="date"], input[type="search"], input[type="password"], input[
 .sheethead h2 { font-size: 1.5rem !important; }
 .sheethead .ibtn { margin-right: calc(var(--s3) * -1); }
 body:has(.lockpanel:not([hidden])) { overflow: hidden; }
+.sel { height: 44px; border: 1px solid var(--rule); border-radius: var(--r); background: var(--bg); padding: 0 var(--s3); font-family: var(--f-ui); max-width: 100%; }
 .sync { border: 0; background: none; padding: 0; font: inherit; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
 .sync::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .55; }
 .sync[data-state="ok"]::before { opacity: .35; }
@@ -276,6 +277,7 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
         <button class="btn primary" type="submit">Open</button>
       </div>
       <div class="lockerr" id="lockErr" aria-live="polite"></div>
+      <button class="btn" id="lockBio" type="button" hidden>Use fingerprint</button>
       <button class="link" id="forgot" type="button" style="justify-self:start">Forgot your passcode</button>
     </form>
     <form id="recForm" hidden>
@@ -357,7 +359,14 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
         <div class="row"><button class="btn primary" id="lpOn" type="button">Turn on</button></div>
       </div>
       <div id="lpOnBox" hidden style="display:grid;gap:12px">
-        <p class="fine">The passcode is on.</p>
+        <p class="fine">The passcode is on. Opening Daybook from the widget does not ask again unless you choose "every time".</p>
+        <label class="fine" for="lockAfter">Lock the journal</label>
+        <select id="lockAfter" class="sel" aria-label="When to lock the journal">
+          <option value="-1">Only when Daybook starts</option><option value="0">Every time I come back</option>
+          <option value="60">After 1 minute away</option><option value="120">After 2 minutes away</option>
+          <option value="300">After 5 minutes away</option><option value="900">After 15 minutes away</option>
+        </select>
+        <div class="row" id="bioRow" hidden><button class="btn" id="bioToggle" type="button" aria-pressed="false">Use fingerprint</button></div>
         <div class="row"><button class="btn" id="lockNow" type="button">Lock now</button></div>
         <div class="row"><input type="password" id="offPin" autocomplete="off" placeholder="Current passcode" aria-label="Current passcode"><button class="btn" id="lpTurnOff" type="button">Turn off</button></div>
       </div>
@@ -365,11 +374,19 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     <div class="section" id="remSection" hidden>
       <h2>Daily reminder</h2>
       <p class="fine">A gentle notification at the time you choose, so a day does not slip by unwritten.</p>
+      <p class="fine">The notification never shows your writing. It has Snooze and Dismiss buttons.</p>
       <div class="row"><input type="time" id="remTime" value="21:00" aria-label="Reminder time"><button class="btn" id="remToggle" type="button" aria-pressed="false">Turn on</button></div>
+      <p class="fine">Quiet hours: no reminder or snooze inside this window.</p>
+      <div class="row"><input type="time" id="quietFrom" value="22:00" aria-label="Quiet hours start"><input type="time" id="quietTo" value="07:00" aria-label="Quiet hours end"><button class="btn" id="quietToggle" type="button" aria-pressed="false">Off</button></div>
+    </div>
+    <div class="section" id="privSection" hidden>
+      <h2>Privacy</h2>
+      <p class="fine">The home-screen widget and notifications only ever show dates, never your writing. You can also keep Daybook blank in the recent-apps screen.</p>
+      <div class="row"><button class="btn" id="recToggle" type="button" aria-pressed="true">Hidden in recent apps</button></div>
     </div>
     <div class="section">
       <h2>Your data</h2>
-      <p class="fine">A full backup is one file with every entry and photo. Restoring adds back anything missing and never overwrites an entry. Make one now and then.</p>
+      <p class="fine">A full backup is one file with every entry and photo. Restoring adds back anything missing and never overwrites an entry. The file is not encrypted, so keep it somewhere private. Make one now and then.</p>
       <div class="row"><button class="btn" id="expJson" type="button">Back up everything</button><button class="btn" id="impBtn" type="button">Restore a backup</button><input type="file" id="impFile" accept="application/json,.json" hidden></div>
     </div>
     <div class="section">

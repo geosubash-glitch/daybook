@@ -43,6 +43,8 @@ jobs:
           python3 android-native/patch_manifest.py
           sed -i 's#@drawable/splash#@color/ic_launcher_background#' android/app/src/main/res/values/styles.xml
           grep -q "targetSdkVersion = 36" android/variables.gradle || (echo "Target SDK is not 36" && exit 1)
+          sed -i '/^dependencies {/a\    implementation "androidx.biometric:biometric:1.1.0"' android/app/build.gradle
+          grep -n biometric android/app/build.gradle
           npx cap sync android
       - name: Build and sign
         working-directory: android
