@@ -4,7 +4,7 @@
 import { initializeApp } from './vendor/firebase.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, signInWithCredential, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser }
   from './vendor/firebase.js';
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, addDoc, collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, getCountFromServer }
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, getCountFromServer }
   from './vendor/firebase.js';
 
 // The Android app carries a native Google sign-in helper. The app's own bridge calls it by name.
@@ -119,7 +119,6 @@ export function createStore(cfg) {
     addPhoto: (id, dataUrl, date) => setDoc(ref('photos', id), { data: dataUrl, date, created: Date.now() }),
     async getPhoto(id) { const d = await getDoc(ref('photos', id)); return d.exists() ? d.data().data : null; },
     deletePhoto: (id) => deleteDoc(ref('photos', id)),
-    logTelemetry: (d) => addDoc(collection(db, 'telemetry'), d),
     sync: () => waitForPendingWrites(db)
   };
 }

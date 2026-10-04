@@ -57,22 +57,5 @@ service cloud.firestore {
           );
       }
     }
-
-    // Anonymous app health reports (crashes and speed). Write-only: nobody can read them through the app.
-    match /telemetry/{id} {
-      allow read, update, delete: if false;
-      allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['iid', 't', 'ev', 'v', 'plat', 'os', 'ms', 'msg', 'at'])
-        && request.resource.data.keys().hasAll(['iid', 't', 'ev', 'v', 'plat', 'os'])
-        && request.resource.data.iid is string && request.resource.data.iid.size() <= 40
-        && request.resource.data.t is number
-        && request.resource.data.ev is string && request.resource.data.ev.size() <= 30
-        && request.resource.data.v is string && request.resource.data.v.size() <= 20
-        && request.resource.data.plat is string && request.resource.data.plat.size() <= 10
-        && request.resource.data.os is string && request.resource.data.os.size() <= 60
-        && (!('ms' in request.resource.data) || request.resource.data.ms is number)
-        && (!('msg' in request.resource.data) || (request.resource.data.msg is string && request.resource.data.msg.size() <= 200))
-        && (!('at' in request.resource.data) || (request.resource.data.at is string && request.resource.data.at.size() <= 120));
-    }
   }
 }
