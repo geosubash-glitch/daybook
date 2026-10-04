@@ -20,7 +20,10 @@ public class MainActivity extends BridgeActivity {
                     : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
             getWindow().setAttributes(lp);
         }
+        // Belt and braces: the classic fullscreen flag plus the modern insets call.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         hideStatusBar();
+        getWindow().getDecorView().post(this::hideStatusBar);
     }
 
     // Immersive: no clock, battery or signal strip while you write. A swipe down from the top
@@ -34,7 +37,13 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) hideStatusBar();
+        if (hasFocus) { hideStatusBar(); getWindow().getDecorView().postDelayed(this::hideStatusBar, 300); }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        hideStatusBar();
     }
 
     // When you leave the app, refresh the home-screen widget so it shows what you just wrote.
