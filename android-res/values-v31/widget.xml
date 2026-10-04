@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+, light mode: the phone's own colours (Material You) and its own widget corner radius. -->
+<resources>
+    <color name="w_ink">@android:color/system_neutral1_900</color>
+    <color name="w_soft">@android:color/system_neutral2_600</color>
+    <color name="w_stroke">#66FFFFFF</color>
+    <color name="w_sheen_top">#59FFFFFF</color>
+    <color name="w_sheen_bottom">#0DFFFFFF</color>
+    <dimen name="w_radius">@android:dimen/system_app_widget_background_radius</dimen>
+</resources>

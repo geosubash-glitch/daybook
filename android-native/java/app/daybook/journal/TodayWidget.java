@@ -7,10 +7,13 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
@@ -31,7 +34,26 @@ import org.json.JSONObject;
  * The app keeps the list of written days in its local storage; the widget only reads it.
  */
 public class TodayWidget extends AppWidgetProvider {
-    private static final int INK = 0xFFF2EFE8, SOFT = 0xFFC9C6BE, MISSED = 0x99F2EFE8, FUTURE = 0x40F2EFE8;
+    // The grid is drawn in white with different opacities, then tinted with the phone's own text colour
+    // (Android 12+, light or dark), so it matches the system instead of one fixed style.
+    private static final int INK = 0xFFFFFFFF, SOFT = 0xCCFFFFFF, MISSED = 0x99FFFFFF, FUTURE = 0x40FFFFFF;
+
+    private static void tintGrid(Context ctx, RemoteViews v) {
+        if (Build.VERSION.SDK_INT < 31) return;                       // older phones keep the white-on-dark-glass look
+        int day = colorFor(ctx, false), night = colorFor(ctx, true);
+        if (Build.VERSION.SDK_INT >= 33) {
+            v.setColorStateList(R.id.w_grid, "setImageTintList", ColorStateList.valueOf(day), ColorStateList.valueOf(night));
+        } else {
+            boolean isNight = (ctx.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+            v.setColorStateList(R.id.w_grid, "setImageTintList", ColorStateList.valueOf(isNight ? night : day));
+        }
+    }
+
+    private static int colorFor(Context ctx, boolean night) {
+        Configuration c = new Configuration(ctx.getResources().getConfiguration());
+        c.uiMode = (c.uiMode & ~Configuration.UI_MODE_NIGHT_MASK) | (night ? Configuration.UI_MODE_NIGHT_YES : Configuration.UI_MODE_NIGHT_NO);
+        return ctx.createConfigurationContext(c).getColor(R.color.w_ink);
+    }
 
     public static void refreshAll(Context ctx) {
         AppWidgetManager m = AppWidgetManager.getInstance(ctx);
@@ -70,7 +92,7 @@ public class TodayWidget extends AppWidgetProvider {
         String weekday = new SimpleDateFormat("EEEE", Locale.ENGLISH).format(now.getTime()).toUpperCase(Locale.ENGLISH);
         String date = new SimpleDateFormat("d MMMM", Locale.ENGLISH).format(now.getTime());
         String shortDate = new SimpleDateFormat("d MMM", Locale.ENGLISH).format(now.getTime());
-        String status = today ? "Written today" : "Nothing yet today";
+        String status = today ? "\u2713  Written today" : "Nothing yet today";
         String detail = streak > 1 ? streak + "-day streak" : (today ? "A good start" : "Tap to write");
 
         Bitmap grid = drawMonth(now, days);
@@ -96,7 +118,6 @@ public class TodayWidget extends AppWidgetProvider {
             v.setTextViewText(R.id.w_date, tiny ? shortDate : date);
             v.setTextViewText(R.id.w_status, status);
             v.setTextViewText(R.id.w_detail, detail);
-            v.setTextColor(R.id.w_status, today ? INK : SOFT);
             v.setTextViewTextSize(R.id.w_date, TypedValue.COMPLEX_UNIT_SP, tiny ? 16 : micro ? 22 : compact ? 20 : (showGrid ? 26 : 24));
             v.setViewVisibility(R.id.w_weekday, showWeekday ? View.VISIBLE : View.GONE);
             v.setViewVisibility(R.id.w_status, showStatus ? View.VISIBLE : View.GONE);
@@ -105,7 +126,7 @@ public class TodayWidget extends AppWidgetProvider {
             int pad = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, tiny ? 8 : (micro || compact) ? 12 : 18,
                     context.getResources().getDisplayMetrics()));
             v.setViewPadding(android.R.id.background, pad, pad, pad, pad);
-            if (showGrid) v.setImageViewBitmap(R.id.w_grid, grid);
+            if (showGrid) { v.setImageViewBitmap(R.id.w_grid, grid); tintGrid(context, v); }
             if (tap != null) v.setOnClickPendingIntent(android.R.id.background, tap);
             manager.updateAppWidget(id, v);
         }

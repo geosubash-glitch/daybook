@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget look, defaults for older Android: dark glass with light text. Android 12+ overrides these with the phone's own palette. -->
+<resources>
+    <color name="w_ink">#F2EFE8</color>
+    <color name="w_soft">#C9C6BE</color>
+    <color name="w_stroke">#55FFFFFF</color>
+    <color name="w_sheen_top">#2EFFFFFF</color>
+    <color name="w_sheen_bottom">#08FFFFFF</color>
+    <dimen name="w_radius">28dp</dimen>
+</resources>

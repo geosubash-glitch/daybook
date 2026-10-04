@@ -10,16 +10,16 @@
     <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1"
         android:orientation="vertical" android:layout_marginEnd="8dp">
         <TextView android:id="@+id/w_weekday" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="SUNDAY" android:textColor="#C9C6BE" android:shadowColor="#99000000" android:shadowRadius="4" android:textSize="11sp" android:letterSpacing="0.18"
+            android:text="SUNDAY" android:textColor="@color/w_soft" android:textSize="11sp" android:letterSpacing="0.18"
             android:fontFamily="sans-serif-medium" />
         <TextView android:id="@+id/w_date" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="4 October" android:textColor="#F2EFE8" android:shadowColor="#99000000" android:shadowRadius="4" android:textSize="26sp" android:fontFamily="serif"
+            android:text="4 October" android:textColor="@color/w_ink" android:textSize="26sp" android:fontFamily="serif"
             android:layout_marginTop="2dp" android:maxLines="1" android:ellipsize="end" />
         <TextView android:id="@+id/w_status" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Nothing yet today" android:textColor="#C9C6BE" android:shadowColor="#99000000" android:shadowRadius="4" android:textSize="13sp"
+            android:text="Nothing yet today" android:textColor="@color/w_soft" android:textSize="13sp"
             android:fontFamily="serif" android:textStyle="italic" android:layout_marginTop="10dp" />
         <TextView android:id="@+id/w_detail" android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Tap to write" android:textColor="#C9C6BE" android:shadowColor="#99000000" android:shadowRadius="4" android:textSize="11sp" android:letterSpacing="0.06"
+            android:text="Tap to write" android:textColor="@color/w_soft" android:textSize="11sp" android:letterSpacing="0.06"
             android:fontFamily="sans-serif" android:layout_marginTop="2dp" />
     </LinearLayout>
     <ImageView android:id="@+id/w_grid" android:layout_width="0dp" android:layout_height="match_parent"
