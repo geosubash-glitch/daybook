@@ -1,5 +1,6 @@
 import { config } from './config.js';
 import { correct, fixError } from './grammar.js';
+import { initTelemetry, track, telemetryOn, setTelemetry } from './telemetry.js';
 import { isNative, haptic, onBack, reminderPrefs, setReminder, saveReminderTime, initNotificationActions, bioAvailable, bioAuth, setRecentsPrivacy, devicePrefs, saveDevicePrefs, setWidgetDays, clearWidget } from './native.js';
 
 const $ = (s) => document.querySelector(s);
@@ -165,6 +166,7 @@ $('#signOut').addEventListener('click', async () => {
 function start() {
   if (started) return;
   started = true;
+  initTelemetry(store);
   gate('#shell');
   const d = new Date(); d.setDate(d.getDate() - RECENT_DAYS);
   recentFrom = keyOf(d);
@@ -175,7 +177,7 @@ function start() {
     const seen = new Set();
     rows.forEach((e) => { if (isDate(e.date)) { entries[e.date] = e; seen.add(e.date); } });
     Object.keys(entries).forEach((k) => { if (k >= recentFrom && !seen.has(k) && !(dirty && k === cur)) delete entries[k]; });
-    if (!loaded) { loaded = true; goto(cur); refreshMeta(); }
+    if (!loaded) { loaded = true; goto(cur); refreshMeta(); track('app_open', { ms: Math.round(performance.now()) }); }
     else afterEntriesChanged();
   }, () => goOffline('Lost the connection to your journal. Check your internet and reload.'));
 }
@@ -311,7 +313,13 @@ $('#lockBtn').addEventListener('click', () => {
   if (!p.hidden) { closeExport(); closeBrowse(); renderLockPanel(); renderReminder(); renderDevice(); }
 });
 $('#lpClose').addEventListener('click', closePanel);
+function renderTelemetry() {
+  const on = telemetryOn();
+  $('#telToggle').setAttribute('aria-pressed', String(on)); $('#telToggle').textContent = on ? 'Sharing: on' : 'Sharing: off';
+}
+$('#telToggle').addEventListener('click', () => { setTelemetry(!telemetryOn()); renderTelemetry(); });
 async function renderDevice() {
+  renderTelemetry();
   const d = devicePrefs();
   $('#lockAfter').value = String(d.lockAfter);
   $('#privSection').hidden = !isNative();
