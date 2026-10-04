@@ -81,24 +81,28 @@ public class TodayWidget extends AppWidgetProvider {
             Bundle o = manager.getAppWidgetOptions(id);
             int w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 250);
             int h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 110);
-            // Tiers, smallest first: each step up in size adds one more thing.
-            boolean micro = w < 110 || h < 55;                 // short date only
-            boolean tiny = !micro && (w < 150 || h < 70);      // + weekday
-            boolean showStatus = !micro && !tiny;              // + written / not yet
-            boolean showDetail = showStatus && h >= 100 && w >= 160;  // + streak line
-            boolean showGrid = w >= 230 && h >= 135;           // + month grid
+            // Tiers, biggest first. Roughly: full size (4x2) shows everything; half the size
+            // drops the month grid; half again keeps only the date.
+            boolean showGrid = w >= 220 && h >= 110;                 // + month grid
+            boolean full = w >= 130 && h >= 100;                     // weekday, status, streak
+            boolean compact = !full && w >= 200 && h >= 55;          // date + status on a slim bar
+            boolean micro = !full && !compact;                       // date only
+            boolean tiny = micro && (w < 110 || h < 55);             // shorter date, less padding
+            boolean showStatus = full || compact;
+            boolean showDetail = full && h >= 100 && w >= 160;
+            boolean showWeekday = full;
             RemoteViews v = new RemoteViews(context.getPackageName(), R.layout.widget_today);
             v.setTextViewText(R.id.w_weekday, weekday);
-            v.setTextViewText(R.id.w_date, micro ? shortDate : date);
+            v.setTextViewText(R.id.w_date, tiny ? shortDate : date);
             v.setTextViewText(R.id.w_status, status);
             v.setTextViewText(R.id.w_detail, detail);
             v.setTextColor(R.id.w_status, today ? INK : SOFT);
-            v.setTextViewTextSize(R.id.w_date, TypedValue.COMPLEX_UNIT_SP, micro ? 16 : tiny ? 19 : (showGrid ? 26 : 24));
-            v.setViewVisibility(R.id.w_weekday, micro ? View.GONE : View.VISIBLE);
+            v.setTextViewTextSize(R.id.w_date, TypedValue.COMPLEX_UNIT_SP, tiny ? 16 : micro ? 22 : compact ? 20 : (showGrid ? 26 : 24));
+            v.setViewVisibility(R.id.w_weekday, showWeekday ? View.VISIBLE : View.GONE);
             v.setViewVisibility(R.id.w_status, showStatus ? View.VISIBLE : View.GONE);
             v.setViewVisibility(R.id.w_detail, showDetail ? View.VISIBLE : View.GONE);
             v.setViewVisibility(R.id.w_grid, showGrid ? View.VISIBLE : View.GONE);
-            int pad = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, micro ? 8 : tiny ? 12 : 18,
+            int pad = Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, tiny ? 8 : (micro || compact) ? 12 : 18,
                     context.getResources().getDisplayMetrics()));
             v.setViewPadding(android.R.id.background, pad, pad, pad, pad);
             if (showGrid) v.setImageViewBitmap(R.id.w_grid, grid);
