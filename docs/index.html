@@ -117,6 +117,19 @@ select, input[type="date"], input[type="search"], input[type="password"], input[
 .sheethead h2 { font-size: 1.5rem !important; }
 .sheethead .ibtn { margin-right: calc(var(--s3) * -1); }
 body:has(.lockpanel:not([hidden])) { overflow: hidden; }
+.sync { border: 0; background: none; padding: 0; font: inherit; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.sync::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .55; }
+.sync[data-state="ok"]::before { opacity: .35; }
+.sync[data-state="wait"], .sync[data-state="busy"] { color: var(--ink); }
+.sync[data-state="busy"]::before { animation: pulse 1s ease-in-out infinite; }
+.sync[data-state="bad"] { color: var(--danger); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+@keyframes pulse { 50% { opacity: .15; } }
+@media (prefers-reduced-motion: reduce) { .sync[data-state="busy"]::before { animation: none; } }
+dialog.consent { border: 1px solid var(--rule); border-radius: 20px; background: var(--bg); color: var(--ink); padding: var(--s5); max-width: min(26rem, calc(100vw - 2 * var(--s5))); }
+dialog.consent::backdrop { background: rgba(0, 0, 0, .45); }
+dialog.consent h2 { font-family: var(--f-display); font-weight: 500; font-size: 1.5rem; margin: 0 0 var(--s3); }
+dialog.consent p { margin: 0 0 var(--s5); color: var(--ink-2); }
+dialog.consent .row { display: flex; gap: var(--s3); justify-content: flex-end; flex-wrap: wrap; }
 @media (max-width: 480px) { .foot .info { order: 3; flex-basis: 100%; } }
 .lockpanel input { flex: 1 1 160px; min-width: 0; }
 .fine { font-size: .8rem; color: var(--ink-2); margin: 0; }
@@ -275,6 +288,11 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
   </div>
 </div>
 
+<dialog class="consent" id="gramConsent" aria-labelledby="gcTitle">
+  <h2 id="gcTitle">Send text for correction?</h2>
+  <p>Grammar correction sends the writing you ask it to correct to LanguageTool, a public service, over the internet. Your account details and the rest of your journal are not sent. Leave it off for anything very private.</p>
+  <div class="row"><button class="btn" id="gcNo" type="button">Cancel</button><button class="btn" id="gcYes" type="button" style="background:var(--ink);color:var(--ink-on)">I understand</button></div>
+</dialog>
 <div class="lightbox" id="lightbox" hidden>
   <button class="ibtn" id="lbClose" type="button" aria-label="Close photo"><svg class="ic"><use href="#i-x"/></svg></button>
   <img id="lbImg" alt="Photo of a handwritten page">
@@ -421,7 +439,7 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
         <button class="ibtn" id="auto" type="button" aria-label="Auto-correct while I write" title="Auto-correct as I write" aria-pressed="false"><svg class="ic"><use href="#i-spell"/></svg></button>
         <button class="ibtn" id="undo" type="button" aria-label="Undo the last correction" title="Undo correction" hidden><svg class="ic"><use href="#i-undo"/></svg></button>
       </div>
-      <div class="info"><span id="wc">0 words</span><span id="status" role="status"></span></div>
+      <div class="info"><span id="wc">0 words</span><span id="status" role="status"></span><button type="button" id="sync" class="sync" data-state="ok" disabled aria-live="polite">Synced</button></div>
     </div>
   </main>
 </div>

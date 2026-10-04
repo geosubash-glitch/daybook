@@ -35,6 +35,26 @@ let loaded = false, editable = false, started = false, unwatch = null, navToken 
 let lockData = null, prefs = {}, hiddenAt = 0, failCount = 0, blockedUntil = 0;
 let totalCount = null, firstDate = null, allLoaded = false;
 let pending = 0;
+let syncFailed = false; const failedWrites = {};
+function renderSync() {
+  const el = $('#sync'); if (!el) return;
+  let t, st;
+  if (syncFailed) { t = "Couldn't sync · Tap to retry"; st = 'bad'; }
+  else if (!navigator.onLine && (pending || dirty)) { t = 'Saved on this device · Waiting to sync'; st = 'wait'; }
+  else if (pending) { t = 'Syncing…'; st = 'busy'; }
+  else if (dirty) { t = 'Saving…'; st = 'busy'; }
+  else { t = 'Synced'; st = 'ok'; }
+  if (el.textContent !== t) el.textContent = t;
+  el.dataset.state = st; el.disabled = st !== 'bad';
+}
+async function retrySync() {
+  const dates = Object.keys(failedWrites); syncFailed = false; renderSync();
+  for (const d of dates) {
+    const data = failedWrites[d]; delete failedWrites[d]; pending++; renderSync();
+    store.setEntry(d, data).then(() => { pending--; renderSync(); })
+      .catch(() => { pending--; failedWrites[d] = data; syncFailed = true; renderSync(); });
+  }
+}
 let autoFix = false, fixBusy = false, fixTimer = null, undoInfo = null, lastFixed = '';
 
 /* ---------- screens ---------- */
@@ -73,7 +93,7 @@ async function onAuth(user) {
     $('#siErr').textContent = 'Signed in, but the journal could not be reached. Check your connection and that the Firestore rules were published.';
     return;
   }
-  autoFix = !!prefs.autoFix; setAutoUi();
+  autoFix = !!prefs.autoFix && !!prefs.grammarOk; setAutoUi();
   if (lockData && lockData.hash && hasCrypto) showLock(); else start();
 }
 function teardown() {
@@ -81,7 +101,7 @@ function teardown() {
   if (unwatch) { try { unwatch(); } catch (e) {} unwatch = null; }
   clearTimeout(timer); clearTimeout(fixTimer);
   entries = {}; monthsLoaded = new Set(); photoCache = {}; photos = [];
-  loaded = editable = started = dirty = allLoaded = false;
+  loaded = editable = started = dirty = allLoaded = false; pending = 0; syncFailed = false; for (const k in failedWrites) delete failedWrites[k]; renderSync();
   lockData = null; prefs = {}; totalCount = null; firstDate = null; undoInfo = null;
   $('#body').value = ''; $('#title').value = ''; $('#results').textContent = ''; $('#q').value = '';
   $('#lockPanel').hidden = true; $('#browse').hidden = true; $('#exportPanel').hidden = true;
@@ -382,7 +402,7 @@ function loadEditor() {
 }
 function touch() {
   if (!editable) return;
-  dirty = true; setStatus('Saving…');
+  dirty = true; setStatus('Saving…'); renderSync();
   clearTimeout(timer); timer = setTimeout(flush, 900);
 }
 function flush() {
@@ -401,13 +421,14 @@ async function persist(e) {
   entries[e.date] = data;
   if (!hasContent(prev) && totalCount !== null) { totalCount++; if (!firstDate || e.date < firstDate) firstDate = e.date; }
   pending++;
-  if (cur === e.date) setStatus(navigator.onLine ? 'Saving…' : 'Kept here, uploads when online');
+  renderSync();
   renderCal(); renderCount(); renderExport();
   noteWidget(e.date, hasContent(data));
   store.setEntry(e.date, data).then(() => {
-    pending--;
+    pending--; delete failedWrites[e.date]; if (!Object.keys(failedWrites).length) syncFailed = false;
     if (!pending && !dirty && cur === e.date) setStatus('saved');
-  }).catch(() => { pending--; if (cur === e.date) setStatus('Not uploaded. Check your connection and sign-in.'); });
+    renderSync();
+  }).catch(() => { pending--; failedWrites[e.date] = data; syncFailed = true; renderSync(); });
 }
 function closeBrowse() { $('#browse').hidden = true; $('#browseBtn').setAttribute('aria-expanded', 'false'); }
 async function goto(k, fromBrowse) {
@@ -672,8 +693,21 @@ async function fixText(core) {
 }
 const wrapKeep = (src, out) => src.match(/^\s*/)[0] + out + src.match(/\s*$/)[0];
 function showUndo(info) { undoInfo = info; $('#undo').hidden = !info; }
+function askGrammarConsent() {
+  if (prefs.grammarOk) return Promise.resolve(true);
+  const d = $('#gramConsent');
+  if (!d.showModal) return Promise.resolve(window.confirm('Grammar correction sends the text you correct to LanguageTool, a public service. Continue?') && (prefs.grammarOk = true, store.setSetting('prefs', prefs).catch(() => {}), true));
+  return new Promise((res) => {
+    const done = (ok) => { d.close(); d.removeEventListener('cancel', no); $('#gcYes').onclick = $('#gcNo').onclick = null;
+      if (ok) { prefs.grammarOk = true; store.setSetting('prefs', prefs).catch(() => {}); } res(ok); };
+    const no = (ev) => { if (ev) ev.preventDefault(); done(false); };
+    $('#gcYes').onclick = () => done(true); $('#gcNo').onclick = () => no();
+    d.addEventListener('cancel', no); d.showModal();
+  });
+}
 async function fixNow() {
   if (!editable || fixBusy) return;
+  if (!(await askGrammarConsent())) return;
   const b = $('#body'), src = b.value, core = src.trim();
   if (words(core) < 2) { setStatus('Nothing to correct yet'); return; }
   fixBusy = true; $('#fix').disabled = true; setStatus('Correcting…');
@@ -722,6 +756,7 @@ $('#body').addEventListener('input', () => {
 $('#title').addEventListener('input', touch);
 $('#fix').addEventListener('click', fixNow);
 $('#auto').addEventListener('click', async () => {
+  if (!autoFix && !(await askGrammarConsent())) return;
   autoFix = !autoFix; prefs.autoFix = autoFix; delete prefs.geminiKey; delete prefs.model; setAutoUi();
   setStatus(autoFix ? 'Auto-correct on' : 'Auto-correct off');
   store.setSetting('prefs', prefs).catch(() => {});
@@ -785,11 +820,13 @@ function netState() {
   const b = $('#banner');
   if (!navigator.onLine) { if (!$('#shell').hidden) showBanner(OFFLINE_MSG); }
   else if (b.textContent === OFFLINE_MSG) showBanner('');
-  if (navigator.onLine && pending) setStatus('Uploading…');
+  if (navigator.onLine && syncFailed) retrySync();
+  renderSync();
 }
 window.addEventListener('online', netState);
 window.addEventListener('offline', netState);
 window.addEventListener('pagehide', flush);
+$('#sync').addEventListener('click', retrySync);
 window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 window.addEventListener('resize', autosize);
 
