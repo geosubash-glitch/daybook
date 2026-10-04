@@ -147,8 +147,8 @@ dialog.consent .row { display: flex; gap: var(--s3); justify-content: flex-end; 
 @media (min-width: 760px) { .browse { grid-template-columns: 1fr 1fr; } .browse .wide { grid-column: 1 / -1; } }
 .browse h2 { margin: 0 0 var(--s3); font-family: var(--f-display); font-weight: 600; font-size: 1.15rem; letter-spacing: .1em; text-transform: uppercase; }
 .calhead { display: flex; justify-content: space-between; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
-.calhead select { padding: 0 var(--s2); }
-.calhead .sel { display: flex; gap: var(--s2); min-width: 0; }
+.calhead select { padding-left: var(--s3); padding-right: 36px; background-position: right 12px center; }
+.calhead .selgrp { display: flex; gap: var(--s2); min-width: 0; }
 .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--s1); text-align: center; }
 .cal .wd { font-size: .68rem; letter-spacing: .1em; color: var(--ink-2); padding: var(--s2) 0; }
 .cal button { position: relative; border: 1px solid transparent; background: transparent; border-radius: var(--r); aspect-ratio: 1 / 1; max-height: 44px; width: 100%; font-variant-numeric: tabular-nums; font-size: .88rem; padding: 0; }
@@ -418,7 +418,7 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     <div>
       <h2>Calendar</h2>
       <div class="calhead">
-        <div class="sel">
+        <div class="selgrp">
           <select id="mSel" aria-label="Month"></select>
           <select id="ySel" aria-label="Year"></select>
         </div>
