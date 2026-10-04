@@ -1,6 +1,6 @@
 import { config } from './config.js';
 import { correct, fixError } from './grammar.js';
-import { isNative, haptic, onBack, reminderPrefs, setReminder, saveQuiet, initNotificationActions, bioAvailable, bioAuth, setRecentsPrivacy, devicePrefs, saveDevicePrefs, setWidgetDays, clearWidget } from './native.js';
+import { isNative, haptic, onBack, reminderPrefs, setReminder, saveReminderTime, initNotificationActions, bioAvailable, bioAuth, setRecentsPrivacy, devicePrefs, saveDevicePrefs, setWidgetDays, clearWidget } from './native.js';
 
 const $ = (s) => document.querySelector(s);
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -328,27 +328,23 @@ $('#bioToggle').addEventListener('click', async () => {
   d.bio = !d.bio; saveDevicePrefs(d); renderDevice();
 });
 if (isNative()) { setRecentsPrivacy(devicePrefs().recents); initNotificationActions(); }
+const niceTime = (t) => { const [h, m] = String(t).split(':').map(Number); return ((h + 11) % 12 + 1) + ':' + String(m).padStart(2, '0') + ' ' + (h < 12 ? 'am' : 'pm'); };
 function renderReminder() {
   $('#remSection').hidden = !isNative();
   const r = reminderPrefs(); $('#remTime').value = r.time;
-  $('#quietFrom').value = r.quiet.from; $('#quietTo').value = r.quiet.to;
-  $('#quietToggle').setAttribute('aria-pressed', String(r.quiet.on)); $('#quietToggle').textContent = r.quiet.on ? 'On' : 'Off';
-  $('#remToggle').setAttribute('aria-pressed', String(r.on)); $('#remToggle').textContent = r.on ? 'On' : 'Turn on';
+  $('#remStatus').textContent = r.on ? 'On: every day at ' + niceTime(r.time) : 'Off';
+  $('#remStatus').dataset.on = String(r.on);
+  $('#remToggle').textContent = r.on ? 'Turn off' : 'Turn on';
 }
 async function applyReminder(on) {
-  try { await setReminder(on, $('#remTime').value || '21:00'); haptic(); $('#lpMsg').textContent = on ? 'Reminder set for ' + $('#remTime').value + ' every day.' : 'Reminder turned off.'; }
-  catch (e) { $('#lpMsg').textContent = String(e && e.message || 'Could not set the reminder.'); }
+  const msg = $('#remMsg'); msg.textContent = ''; $('#remToggle').disabled = true;
+  try { await setReminder(on, $('#remTime').value || '21:00'); haptic(); msg.textContent = on ? 'Done. You will get a reminder at ' + niceTime($('#remTime').value || '21:00') + ' every day.' : 'Reminder turned off.'; }
+  catch (e) { msg.textContent = String(e && e.message || 'Could not change the reminder.'); }
+  $('#remToggle').disabled = false;
   renderReminder();
 }
 $('#remToggle').addEventListener('click', () => applyReminder(!reminderPrefs().on));
-function quietChanged(patch) {
-  const q = Object.assign({}, reminderPrefs().quiet, patch); saveQuiet(q); renderReminder();
-  if (reminderPrefs().on) applyReminder(true);
-}
-$('#quietToggle').addEventListener('click', () => quietChanged({ on: !reminderPrefs().quiet.on }));
-$('#quietFrom').addEventListener('change', () => quietChanged({ from: $('#quietFrom').value || '22:00' }));
-$('#quietTo').addEventListener('change', () => quietChanged({ to: $('#quietTo').value || '07:00' }));
-$('#remTime').addEventListener('change', () => { if (reminderPrefs().on) applyReminder(true); });
+$('#remTime').addEventListener('change', () => { const t = $('#remTime').value || '21:00'; if (reminderPrefs().on) applyReminder(true); else { saveReminderTime(t); renderReminder(); } });
 // Android back button: close whatever is open first, then go back to today, then leave the app.
 onBack(() => {
   if (!$('#lightbox').hidden) { closeLightbox(); return true; }

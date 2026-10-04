@@ -111,13 +111,20 @@ select, input[type="date"], input[type="search"], input[type="password"], input[
 .panel { border: 1px solid var(--rule); padding: var(--s4); border-radius: calc(var(--r) + var(--s4)); display: grid; gap: var(--s3); }
 .panel h2, .panel h3 { margin: 0; font-family: var(--f-display); font-size: 1.3rem; font-weight: 600; }
 .lockpanel { position: fixed; inset: 0; z-index: 45; margin: 0; max-width: none; border: 0; border-radius: 0; background: var(--bg); overflow-y: auto; overscroll-behavior: contain; align-content: start; justify-items: center;
-  padding: max(var(--s4), env(safe-area-inset-top)) max(var(--s5), env(safe-area-inset-right)) max(var(--s7), env(safe-area-inset-bottom)) max(var(--s5), env(safe-area-inset-left)); }
+  padding: 0 max(var(--s5), env(safe-area-inset-right)) max(var(--s7), env(safe-area-inset-bottom)) max(var(--s5), env(safe-area-inset-left)); }
 .lockpanel > * { width: 100%; max-width: 32rem; }
-.sheethead { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--bg); z-index: 1; margin-top: calc(max(var(--s4), env(safe-area-inset-top)) * -1); padding-top: max(var(--s4), env(safe-area-inset-top)); }
+.sheethead { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--bg); z-index: 1; padding-top: max(var(--s5), env(safe-area-inset-top)); }
+.sheethead + .section { padding-top: var(--s5); }
 .sheethead h2 { font-size: 1.5rem !important; }
 .sheethead .ibtn { margin-right: calc(var(--s3) * -1); }
 body:has(.lockpanel:not([hidden])) { overflow: hidden; }
-.sel { height: 44px; border: 1px solid var(--rule); border-radius: var(--r); background: var(--bg); padding: 0 var(--s3); font-family: var(--f-ui); max-width: 100%; }
+select, .sel { -webkit-appearance: none; appearance: none; background-color: transparent; background-repeat: no-repeat; background-position: right 16px center; background-size: 12px; padding-right: 40px; font-family: var(--f-ui); max-width: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236E6E6A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+.sel { height: 44px; border: 1px solid var(--rule); border-radius: var(--r); padding-left: var(--s3); }
+input[type="time"] { padding-inline: var(--s4) var(--s3); }
+input[type="time"]::-webkit-calendar-picker-indicator { margin-inline-start: var(--s3); }
+.remstat { margin: 0; font-size: .95rem; color: var(--ink-2); }
+.remstat[data-on="true"] { color: var(--ink); font-weight: 600; }
 .sync { border: 0; background: none; padding: 0; font: inherit; color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
 .sync::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .55; }
 .sync[data-state="ok"]::before { opacity: .35; }
@@ -212,7 +219,7 @@ input[type="search"] { width: 100%; }
 .browse:not([hidden]) { animation: fadeIn .2s ease-out; }
 .ibtn, .btn, .chip, .choice { transition: transform .12s ease, background-color .15s ease, opacity .15s ease; -webkit-tap-highlight-color: transparent; }
 .ibtn:active:not(:disabled), .btn:active:not(:disabled), .chip:active, .choice:active:not(:disabled) { transform: scale(.96); }
-input[type="time"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3); height: 44px; font: inherit; color: inherit; }
+input[type="time"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3) 0 var(--s4); height: 44px; font: inherit; color: inherit; }
 #remToggle[aria-pressed="true"] { background: var(--ink); color: var(--ink-on); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 .lockerr { color: var(--danger); min-height: 1.2em; font-size: .88rem; }
@@ -375,9 +382,9 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
       <h2>Daily reminder</h2>
       <p class="fine">A gentle notification at the time you choose, so a day does not slip by unwritten.</p>
       <p class="fine">The notification never shows your writing. It has Snooze and Dismiss buttons.</p>
-      <div class="row"><input type="time" id="remTime" value="21:00" aria-label="Reminder time"><button class="btn" id="remToggle" type="button" aria-pressed="false">Turn on</button></div>
-      <p class="fine">Quiet hours: no reminder or snooze inside this window.</p>
-      <div class="row"><input type="time" id="quietFrom" value="22:00" aria-label="Quiet hours start"><input type="time" id="quietTo" value="07:00" aria-label="Quiet hours end"><button class="btn" id="quietToggle" type="button" aria-pressed="false">Off</button></div>
+      <p class="remstat" id="remStatus" data-on="false">Off</p>
+      <div class="row"><input type="time" id="remTime" value="21:00" aria-label="Reminder time"><button class="btn" id="remToggle" type="button">Turn on</button></div>
+      <p class="fine" id="remMsg" role="status" aria-live="polite"></p>
     </div>
     <div class="section" id="privSection" hidden>
       <h2>Privacy</h2>
