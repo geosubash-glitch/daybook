@@ -31,7 +31,7 @@ jobs:
             "appId": "app.daybook.journal",
             "appName": "Daybook",
             "webDir": "docs",
-            "server": { "androidScheme": "https", "url": "https://geosubash-glitch.github.io/daybook/", "allowNavigation": ["geosubash-glitch.github.io", "*.firebaseapp.com", "accounts.google.com"], "errorPath": "offline.html" },
+            "server": { "androidScheme": "https" },
             "android": { "backgroundColor": "#FBFBFA" },
             "plugins": { "FirebaseAuthentication": { "skipNativeAuth": true, "providers": ["google.com"] }, "LocalNotifications": { "smallIcon": "ic_stat_daybook", "iconColor": "#0F0F10" } }
           }
