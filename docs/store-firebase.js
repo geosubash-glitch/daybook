@@ -1,11 +1,11 @@
 // Online storage: Firebase Authentication + Cloud Firestore (free Spark plan).
 // This is the only file that talks to Firebase. To move Daybook to another
 // database someday, write a new store with the same functions as this one.
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { initializeApp } from './vendor/firebase.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, signInWithCredential, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser }
-  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+  from './vendor/firebase.js';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, getCountFromServer }
-  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+  from './vendor/firebase.js';
 
 // The Android app carries a native Google sign-in helper. The app's own bridge calls it by name.
 function nativeAuth() {

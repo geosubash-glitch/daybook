@@ -712,8 +712,10 @@ async function autoRun() {
 }
 
 /* ---------- events ---------- */
+let typeFrame = 0;
 $('#body').addEventListener('input', () => {
-  autosize(); updateWc(); touch();
+  touch();
+  if (!typeFrame) typeFrame = requestAnimationFrame(() => { typeFrame = 0; autosize(); updateWc(); });
   clearTimeout(fixTimer);
   if (autoFix) fixTimer = setTimeout(autoRun, 3500);
 });

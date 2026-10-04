@@ -12,7 +12,11 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Instrument+Sans:wght@400..600&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Instrument+Sans:wght@400..600&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Instrument+Sans:wght@400..600&family=Newsreader:ital,opsz,wght@0,6..72,400..600;1,6..72,400..600&display=swap"></noscript>
+<link rel="modulepreload" href="app.js">
+<link rel="modulepreload" href="store-firebase.js">
+<link rel="modulepreload" href="vendor/firebase.js">
 <style>
 /* Layout: one centred manuscript column on an 8pt grid.
    Corners are concentric: a control is 12px, and anything that holds controls
@@ -45,6 +49,8 @@
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 15px; line-height: 1.5; padding-inline: max(var(--s5), env(safe-area-inset-left)) max(var(--s5), env(safe-area-inset-right)); padding-block: max(var(--s4), env(safe-area-inset-top)) max(var(--s7), env(safe-area-inset-bottom)); }
 button, input, select, textarea { font: inherit; color: inherit; }
+button, a, label, select, summary { touch-action: manipulation; }
+html { -webkit-text-size-adjust: 100%; overscroll-behavior-y: none; }
 button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .col { max-width: 42rem; margin-inline: auto; }
