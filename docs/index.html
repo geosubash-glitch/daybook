@@ -121,7 +121,6 @@ body:has(.lockpanel:not([hidden])) { overflow: hidden; }
 select, .sel { -webkit-appearance: none; appearance: none; background-color: transparent; background-repeat: no-repeat; background-position: right 16px center; background-size: 12px; padding-right: 40px; font-family: var(--f-ui); max-width: 100%;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236E6E6A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
 .sel { height: 44px; border: 1px solid var(--rule); border-radius: var(--r); padding-left: var(--s3); }
-input[type="time"] { padding-inline: var(--s4) var(--s3); }
 input[type="time"]::-webkit-calendar-picker-indicator { margin-inline-start: var(--s3); }
 .remstat { margin: 0; font-size: .95rem; color: var(--ink-2); }
 .remstat[data-on="true"] { color: var(--ink); font-weight: 600; }
@@ -219,7 +218,7 @@ input[type="search"] { width: 100%; }
 .browse:not([hidden]) { animation: fadeIn .2s ease-out; }
 .ibtn, .btn, .chip, .choice { transition: transform .12s ease, background-color .15s ease, opacity .15s ease; -webkit-tap-highlight-color: transparent; }
 .ibtn:active:not(:disabled), .btn:active:not(:disabled), .chip:active, .choice:active:not(:disabled) { transform: scale(.96); }
-input[type="time"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3) 0 var(--s4); height: 44px; font: inherit; color: inherit; }
+input[type="time"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s4); height: 44px; font: inherit; color: inherit; }
 #remToggle[aria-pressed="true"] { background: var(--ink); color: var(--ink-on); }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 .lockerr { color: var(--danger); min-height: 1.2em; font-size: .88rem; }
