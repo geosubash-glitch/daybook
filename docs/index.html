@@ -114,7 +114,7 @@ select, input[type="date"], input[type="search"], input[type="password"], input[
   padding: 0 max(var(--s5), env(safe-area-inset-right)) max(var(--s7), env(safe-area-inset-bottom)) max(var(--s5), env(safe-area-inset-left)); }
 .lockpanel > * { width: 100%; max-width: 32rem; }
 .sheethead { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--bg); z-index: 1; padding-top: max(var(--s5), env(safe-area-inset-top)); }
-.sheethead + .section { padding-top: var(--s5); }
+.sheethead + .section { border-top: 0; padding-top: var(--s5); }
 .sheethead h2 { font-size: 1.5rem !important; }
 .sheethead .ibtn { margin-right: calc(var(--s3) * -1); }
 body:has(.lockpanel:not([hidden])) { overflow: hidden; }

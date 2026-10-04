@@ -41,12 +41,16 @@ async function allowed() {
   return !!p && p.display === 'granted';
 }
 const ACTIONS = { id: 'REMINDER', actions: [{ id: 'snooze', title: 'Snooze 1 hour' }, { id: 'dismiss', title: 'Dismiss', destructive: true }] };
-const GENERIC = { title: 'Daybook', body: 'A few lines about today?', actionTypeId: 'REMINDER', smallIcon: 'ic_stat_daybook', iconColor: '#0F0F10' };
+// Standard reminder notification with its own channel, so the phone's own styling applies (colours, light/dark,
+// floating or island-style heads-up, lock-screen privacy, per-app settings). Private on the lock screen; text is generic anyway.
+const CHANNEL = 'daybook-reminders';
+const GENERIC = { title: 'Daybook', body: 'A few lines about today?', actionTypeId: 'REMINDER', channelId: CHANNEL, group: 'daybook', autoCancel: true, smallIcon: 'ic_stat_daybook' };
+const ensureChannel = () => LN('createChannel', { id: CHANNEL, name: 'Daily reminder', description: 'A gentle nudge to write. Never shows your writing.', importance: 3, visibility: 0, vibration: true }).catch(() => {});
 
 // Snooze and Dismiss buttons on the notification.
 export function initNotificationActions() {
   const c = C(); if (!c || typeof c.addListener !== 'function') return;
-  LN('registerActionTypes', { types: [ACTIONS] }).catch(() => {});
+  ensureChannel(); LN('registerActionTypes', { types: [ACTIONS] }).catch(() => {});
   c.addListener('LocalNotifications', 'localNotificationActionPerformed', (ev) => {
     const id = ev && ev.actionId;
     if (id === 'dismiss') { LN('cancel', { notifications: [{ id: SNOOZE_ID }] }).catch(() => {}); return; }
@@ -58,6 +62,7 @@ export function initNotificationActions() {
 
 export async function setReminder(on, time) {
   if (!C()) throw new Error('Reminders work in the Android app.');
+  if (on) await ensureChannel();
   if (on && !(await allowed())) throw new Error('Notifications are turned off for Daybook. Allow them in Android settings.');
   await LN('cancel', { notifications: [{ id: ID }, { id: SNOOZE_ID }] }).catch(() => {});
   if (on) {
