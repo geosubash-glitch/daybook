@@ -76,3 +76,10 @@ jobs:
           cp android/app/build/outputs/apk/release/app-release.apk Daybook.apk
           gh release view release-latest >/dev/null 2>&1 || gh release create release-latest --title "Daybook (signed release)" --notes "Latest signed Android build, linked from the website." --latest=false
           gh release upload release-latest Daybook.apk --clobber
+      - name: Publish a numbered release (lets Obtainium and other updaters see new versions)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="v${{ github.run_number }}"
+          cp android/app/build/outputs/apk/release/app-release.apk Daybook.apk
+          gh release create "$TAG" Daybook.apk --title "Daybook $TAG" --notes "Signed Android build. Install over an earlier signed build to update." --latest

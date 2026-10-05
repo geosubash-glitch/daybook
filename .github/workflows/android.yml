@@ -75,6 +75,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: apk-latest
+          prerelease: true
+          make_latest: false
           name: Daybook Android app
           body: Download app-debug.apk on your phone and open it to install or update.
           files: android/app/build/outputs/apk/debug/app-debug.apk
