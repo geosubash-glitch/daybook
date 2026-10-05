@@ -342,8 +342,11 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     <div class="section">
       <h3 class="step">2 &nbsp; Save as</h3>
       <div class="choices">
-        <button class="choice" id="expPrint" type="button"><svg class="ic"><use href="#i-book"/></svg><span><b>Book to fold</b><small>Print both sides, fold in half, and it reads like a book</small></span></button>
-        <button class="choice" id="expSheets" type="button"><svg class="ic"><use href="#i-print"/></svg><span><b>Two days per sheet</b><small>Print one side, cut down the middle</small></span></button>
+        <button class="choice" id="expPrint" type="button"><svg class="ic"><use href="#i-book"/></svg><span><b>PDF to print</b><small id="printHow">Print both sides, fold in half, and it reads like a book</small></span></button>
+        <select id="printMode" aria-label="How you will print it">
+          <option value="book">Fold into a book (print both sides)</option>
+          <option value="sheets">Loose pages (print one side, cut in half)</option>
+        </select>
         <button class="choice" id="expTxt" type="button"><svg class="ic"><use href="#i-text"/></svg><span><b>Plain text</b><small>Only your words and their dates</small></span></button>
       </div>
       <p class="msg" id="msg" aria-live="polite"></p>

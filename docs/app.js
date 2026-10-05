@@ -623,7 +623,7 @@ async function renderExport() {
   if (my !== exportToken) return;
   exportCount = n;
   $('#rangeInfo').textContent = n < 0 ? 'The count needs a connection.' : n + (n === 1 ? ' entry' : ' entries') + ' in this range';
-  ['#expPrint', '#expSheets', '#expTxt'].forEach((s) => { $(s).disabled = n === 0; });
+  ['#expPrint', '#expTxt'].forEach((s) => { $(s).disabled = n === 0; });
 }
 // Saving a file. In the Android app the file is written to the phone and the share menu opens,
 // so it can go to Files, Drive, a printer or a chat. On the web it downloads as usual.
@@ -843,7 +843,8 @@ $('#ySel').addEventListener('change', (e) => { calM.y = Number(e.target.value); 
 let qTimer = null;
 $('#q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(renderSearch, 250); });
 ['#range', '#from', '#to'].forEach((s) => $(s).addEventListener('change', renderExport));
-$('#expPrint').addEventListener('click', () => runExport('print'));
+$('#expPrint').addEventListener('click', () => runExport($('#printMode').value === 'sheets' ? 'sheets' : 'print'));
+$('#printMode').addEventListener('change', () => { $('#printHow').textContent = $('#printMode').value === 'sheets' ? 'Two days on each A4 sheet, in plain order' : 'Print both sides, fold in half, and it reads like a book'; });
 document.querySelectorAll('#chips .chip').forEach((b) => b.addEventListener('click', () => { $('#range').value = b.dataset.v; renderExport(); }));
 function closeExport() { $('#exportPanel').hidden = true; $('#exportBtn').setAttribute('aria-expanded', 'false'); }
 $('#exClose').addEventListener('click', closeExport);
@@ -853,7 +854,6 @@ $('#exportBtn').addEventListener('click', () => {
   if (!p.hidden) { closePanel(); closeBrowse(); setMsg(''); renderExport(); }
 });
 $('#expTxt').addEventListener('click', () => runExport('text'));
-$('#expSheets').addEventListener('click', () => runExport('sheets'));
 $('#expJson').addEventListener('click', runBackup);
 $('#impBtn').addEventListener('click', () => $('#impFile').click());
 $('#impFile').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) runRestore(f); });
