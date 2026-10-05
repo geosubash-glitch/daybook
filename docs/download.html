@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Get the Daybook app</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Instrument+Sans:wght@400..600&family=Newsreader:opsz,wght@6..72,400..600&display=swap">
+<style>
+:root { --bg:#FBFBFA; --ink:#141414; --ink-2:#6E6E6A; --rule:#E2E2DE; }
+@media (prefers-color-scheme: dark) { :root { --bg:#0F0F10; --ink:#ECECE8; --ink-2:#94948F; --rule:#2A2A2D; } }
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.65 "Newsreader", Georgia, serif; padding: max(24px, env(safe-area-inset-top)) 24px max(64px, env(safe-area-inset-bottom)); }
+main { max-width: 40rem; margin: 0 auto; }
+.top { display:flex; justify-content:space-between; align-items:center; padding-bottom:20px; border-bottom:1px solid var(--rule); margin-bottom:40px; }
+.brand { font:600 1.2rem "Cormorant Garamond", Georgia, serif; letter-spacing:.14em; text-transform:uppercase; text-decoration:none; color:inherit; }
+.back { font:500 .78rem "Instrument Sans", system-ui, sans-serif; letter-spacing:.08em; text-transform:uppercase; color:inherit; text-decoration:none; border-bottom:1px solid var(--ink); }
+h1 { font:600 2.4rem/1.15 "Cormorant Garamond", Georgia, serif; margin:0 0 4px; text-wrap:balance; }
+.date { font:400 .85rem "Instrument Sans", system-ui, sans-serif; color:var(--ink-2); margin:0 0 36px; }
+h2 { font:600 .78rem "Instrument Sans", system-ui, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-2); margin:40px 0 8px; }
+p, li { margin:0 0 12px; } ul { padding-left: 20px; margin:0 0 12px; }
+a { color:inherit; text-underline-offset:3px; }
+.lead { font-size:1.15rem; }
+.dl { display:inline-block; font:600 .95rem "Instrument Sans", system-ui, sans-serif; background:var(--ink); color:var(--bg); padding:14px 22px; border-radius:10px; text-decoration:none; margin:8px 0 6px; }
+.fine { font:400 .85rem "Instrument Sans", system-ui, sans-serif; color:var(--ink-2); }
+</style>
+</head>
+<body><main>
+<div class="top"><a class="brand" href="index.html">Daybook</a><a class="back" href="index.html">Open Daybook</a></div>
+<h1>Get the Daybook app</h1>
+<p class="lead">Daybook for Android. It works offline and keeps the same private pages you write on the web.</p>
+<a class="dl" id="apk" href="https://github.com/geosubash-glitch/daybook/releases/download/release-latest/Daybook.apk">Download for Android (.apk)</a>
+<p class="fine">Signed release build. Android only. Requires Android 8 or newer.</p>
+<h2>Installing</h2>
+<ul>
+<li>Open the downloaded file. If Android asks, allow installs from your browser (Settings, Install unknown apps).</li>
+<li>Android may say the app is not from the Play Store. That is expected for a file installed directly.</li>
+<li>Sign in with the same Google account and your entries appear.</li>
+</ul>
+<h2>Already installed an older copy?</h2>
+<p>Older test copies were signed with a different key, so Android cannot update them in place. Make sure your entries have synced (they do whenever you are online), uninstall the old one, then install this one and sign in again.</p>
+<h2>No install needed</h2>
+<p>Daybook also runs in your browser at the same address. On a phone, use your browser's menu and choose Add to Home screen to get an app-style icon.</p>
+<p class="fine"><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
+</main></body></html>

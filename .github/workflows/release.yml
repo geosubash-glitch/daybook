@@ -5,7 +5,7 @@ name: Build release app
 on:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   bundle:
     runs-on: ubuntu-latest
@@ -68,3 +68,10 @@ jobs:
         with:
           name: Daybook-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
+      - name: Publish the APK for the website download
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release.apk Daybook.apk
+          gh release view release-latest >/dev/null 2>&1 || gh release create release-latest --title "Daybook (signed release)" --notes "Latest signed Android build, linked from the website." --latest=false
+          gh release upload release-latest Daybook.apk --clobber

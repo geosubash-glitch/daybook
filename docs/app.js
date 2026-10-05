@@ -401,6 +401,7 @@ function readEditor() { return { date: cur, title: $('#title').value.trim(), bod
 // position is restored in the same frame, before anything is painted.
 function autosize() {
   const ta = $('#body');
+  if (!ta.clientWidth) return;                       // hidden or not laid out yet: measuring now would give a wrong, too-short height
   const y = window.scrollY, x = window.scrollX;
   ta.style.height = 'auto';
   const h = Math.max(320, ta.scrollHeight + 8) + 'px';
@@ -871,6 +872,15 @@ window.addEventListener('pagehide', flush);
 $('#sync').addEventListener('click', retrySync);
 window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 window.addEventListener('resize', autosize);
+if (isNative()) { const g = document.getElementById('getApp'); if (g) g.remove(); }
+// After the app comes back from the background the phone can lay the page out a moment late, so the
+// writing box would be measured too short and the page could not scroll. Measure again whenever it returns.
+const remeasure = () => { requestAnimationFrame(autosize); setTimeout(autosize, 250); setTimeout(autosize, 900); };
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') remeasure(); });
+window.addEventListener('pageshow', remeasure);
+window.addEventListener('focus', remeasure);
+if (document.fonts) { document.fonts.ready.then(autosize); document.fonts.addEventListener && document.fonts.addEventListener('loadingdone', autosize); }
+if (window.ResizeObserver) { let lastW = 0; new ResizeObserver(() => { const w = $('#body').clientWidth; if (w !== lastW) { lastW = w; autosize(); } }).observe($('#body')); }
 
 $('#range').value = 'month';
 const t0 = parseKey(cur); calM = { y: t0.getFullYear(), m: t0.getMonth() };
