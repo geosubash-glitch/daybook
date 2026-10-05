@@ -46,6 +46,7 @@ jobs:
           sed -i '/^dependencies {/a\    implementation "androidx.biometric:biometric:1.1.0"' android/app/build.gradle
           grep -n biometric android/app/build.gradle
           npx cap sync android
+          rm -rf android/app/src/main/assets/public/media   # promo video is for the website only, keep it out of the app
       - name: Build and sign
         working-directory: android
         env:

@@ -2,8 +2,10 @@
 
 A private journal: a page for every day, on the web and as an Android app.
 
+[![Watch the 22 second Daybook video](docs/media/daybook-promo.jpg)](https://geosubash-glitch.github.io/daybook/media/daybook-promo.mp4)
+
 - **Website:** https://geosubash-glitch.github.io/daybook/
-- **Android app:** the Releases page, file `app-debug.apk` (for testing). Play Store steps are in `PUBLISHING.md`.
+- **Android app:** https://geosubash-glitch.github.io/daybook/download.html (signed APK). Play Store steps are in `PUBLISHING.md`.
 
 | Folder | What it holds |
 |---|---|
