@@ -872,7 +872,7 @@ window.addEventListener('pagehide', flush);
 $('#sync').addEventListener('click', retrySync);
 window.addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 window.addEventListener('resize', autosize);
-if (isNative()) { const g = document.getElementById('getApp'); if (g) g.remove(); }
+if (isNative()) { ['getApp', 'getApp2'].forEach((i) => { const g = document.getElementById(i); if (g) g.remove(); }); }
 // After the app comes back from the background the phone can lay the page out a moment late, so the
 // writing box would be measured too short and the page could not scroll. Measure again whenever it returns.
 const remeasure = () => { requestAnimationFrame(autosize); setTimeout(autosize, 250); setTimeout(autosize, 900); };
