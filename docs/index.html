@@ -383,6 +383,8 @@ body { background-image: radial-gradient(60% 38% at 8% 0%, var(--amb-1), transpa
   .seg:has(button:nth-child(2)[aria-pressed="true"])::before { transform: translateX(100%); }
   .seg button[aria-pressed="true"] { background: transparent; color: var(--ink-on); }
 }
+@media (max-width: 360px) { .set-row { flex-wrap: wrap; } }
+:root[data-view="readable"] .set-row { flex-wrap: wrap; }
 /* Sheets and panels arrive with a soft blur-in */
 @keyframes sheetIn { from { transform: translateY(28px) scale(.97); opacity: 0; filter: blur(10px); } to { transform: none; opacity: 1; filter: none; } }
 .lockpanel:not([hidden]) { animation: sheetIn .5s var(--smooth); }
