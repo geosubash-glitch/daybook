@@ -174,6 +174,35 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; color:
 .lockpanel select { max-width: 100%; }
 .sheethead { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--bg); z-index: 1; padding-top: max(var(--s5), env(safe-area-inset-top)); }
 .sheethead + .section { border-top: 0; padding-top: var(--s5); }
+.set-title { margin: var(--s5) 4px var(--s2); font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+.sheethead + .set-title { margin-top: var(--s5); }
+.set-group { display: grid; gap: 4px; }
+.set-group > *, .set-sub > * { background: color-mix(in srgb, var(--ink) 5%, var(--bg)); border-radius: 18px; }
+.set-sub { display: grid; gap: 4px; background: none !important; border-radius: 0 !important; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding: 12px 16px; min-height: 60px; width: 100%; border: 0; text-align: left; color: var(--ink); font: inherit; }
+.set-row .lab { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; }
+.set-row .t { font-size: 1.02rem; font-weight: 500; }
+.set-row .s, .set-pad .s { font-size: .82rem; color: var(--ink-2); line-height: 1.35; }
+.set-row.act { cursor: pointer; } .set-row.act:hover { background: color-mix(in srgb, var(--ink) 9%, var(--bg)); }
+.set-row .chev { font-size: 1.6rem; color: var(--ink-2); line-height: 1; }
+.set-row .btn, .set-row select, .set-row input[type=time] { flex: 0 0 auto; min-height: 40px; height: 40px; padding-block: 0; }
+.set-row .btn { padding-inline: 16px; }
+.set-pad { display: grid; gap: var(--s3); padding: 12px 16px 16px; }
+.set-pad .btn, .set-pad input { width: 100%; box-sizing: border-box; }
+.set-note { margin: var(--s2) 4px 0; font-size: .82rem; color: var(--ink-2); }
+.set-note:empty { display: none; }
+.sw { flex: 0 0 auto; position: relative; width: 52px; height: 30px; border-radius: 99px; border: 2px solid var(--ink-2); background: transparent; padding: 0; transition: background-color .15s ease, border-color .15s ease; }
+.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink-2); transition: transform .18s ease, background-color .15s ease, width .15s ease; }
+.sw[aria-checked="true"] { background: var(--ink); border-color: var(--ink); }
+.sw[aria-checked="true"]::after { transform: translateX(22px); background: var(--bg); }
+.seg { display: inline-flex; flex: 0 0 auto; border: 1px solid var(--ink-2); border-radius: 99px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--ink); padding: 0 16px; min-height: 40px; font: inherit; font-size: .92rem; }
+.seg button + button { border-left: 1px solid var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--ink-on, var(--bg)); font-weight: 600; }
+:root[data-view="readable"] .set-row { min-height: 68px; }
+:root[data-view="readable"] .set-row .s, :root[data-view="readable"] .set-pad .s, :root[data-view="readable"] .set-note { font-size: .95rem; }
+@media (max-width: 400px) { .set-row { flex-wrap: wrap; } .set-row .lab { flex-basis: 60%; } }
+
 .sheethead h2 { font-size: 1.5rem !important; }
 .sheethead .ibtn { margin-right: calc(var(--s3) * -1); }
 body:has(.lockpanel:not([hidden])) { overflow: hidden; }
@@ -424,70 +453,76 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
 
   <section class="panel lockpanel" id="lockPanel" hidden aria-label="Settings">
     <div class="sheethead"><h2>Settings</h2><button class="ibtn" id="lpClose" type="button" aria-label="Close" title="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
-    <div class="section">
-      <h2>Account</h2>
-      <p class="fine" id="acct"></p>
-      <div class="row"><button class="btn" id="signOut" type="button">Sign out</button></div>
+    <div class="set-title">Look</div>
+    <div class="set-group">
+      <div class="set-row"><div class="lab"><span class="t">Reading style</span><span class="s">Easy reading has larger text and labelled buttons</span></div>
+        <div class="seg" role="group" aria-label="Reading style"><button type="button" id="vsClassic" aria-pressed="true">Classic</button><button type="button" id="vsEasy" aria-pressed="false">Easy</button></div></div>
     </div>
-    <div class="section">
-      <h2>Passcode</h2>
-      <div id="lpOff" hidden style="display:grid;gap:12px">
-        <p class="fine">Asks for this passcode when the journal opens, and after you have been away for a couple of minutes. The recovery word lets you reset it. Keep both safe.</p>
-        <input type="password" id="setPin" autocomplete="off" placeholder="Passcode, 4 or more characters" aria-label="New passcode">
-        <input type="password" id="setRec" autocomplete="off" placeholder="Recovery word" aria-label="Recovery word">
-        <div class="row"><button class="btn primary" id="lpOn" type="button">Turn on</button></div>
+
+    <div class="set-title">Account</div>
+    <div class="set-group">
+      <div class="set-row"><div class="lab"><span class="t">Signed in</span><span class="s" id="acct"></span></div><button class="btn" id="signOut" type="button">Sign out</button></div>
+    </div>
+
+    <div class="set-title">Lock</div>
+    <div class="set-group">
+      <div id="lpOff" class="set-sub" hidden>
+        <div class="set-row"><div class="lab"><span class="t">Passcode</span><span class="s">Off. Ask for a passcode when Daybook opens</span></div></div>
+        <div class="set-pad">
+          <input type="password" id="setPin" autocomplete="off" placeholder="Passcode, 4 or more characters" aria-label="New passcode">
+          <input type="password" id="setRec" autocomplete="off" placeholder="Recovery word, to reset it" aria-label="Recovery word">
+          <button class="btn primary" id="lpOn" type="button">Turn on passcode</button>
+          <span class="s">Keep the passcode and recovery word safe.</span>
+        </div>
       </div>
-      <div id="lpOnBox" hidden style="display:grid;gap:12px">
-        <p class="fine">The passcode is on. Opening Daybook from the widget does not ask again unless you choose "every time".</p>
-        <label class="fine" for="lockAfter">Lock the journal</label>
-        <select id="lockAfter" class="sel" aria-label="When to lock the journal">
-          <option value="-1">Only when Daybook starts</option><option value="0">Every time I come back</option>
-          <option value="60">After 1 minute away</option><option value="120">After 2 minutes away</option>
-          <option value="300">After 5 minutes away</option><option value="900">After 15 minutes away</option>
-        </select>
-        <div class="row" id="bioRow" hidden><button class="btn" id="bioToggle" type="button" aria-pressed="false">Use fingerprint</button></div>
-        <div class="row"><button class="btn" id="lockNow" type="button">Lock now</button></div>
-        <div class="row"><input type="password" id="offPin" autocomplete="off" placeholder="Current passcode" aria-label="Current passcode"><button class="btn" id="lpTurnOff" type="button">Turn off</button></div>
+      <div id="lpOnBox" class="set-sub" hidden>
+        <div class="set-row"><div class="lab"><span class="t">Lock after</span></div>
+          <select id="lockAfter" class="sel" aria-label="When to lock the journal">
+            <option value="-1">Only at start</option><option value="0">Every time</option>
+            <option value="60">1 minute away</option><option value="120">2 minutes away</option>
+            <option value="300">5 minutes away</option><option value="900">15 minutes away</option>
+          </select></div>
+        <div class="set-row" id="bioRow" hidden><div class="lab"><span class="t">Fingerprint</span></div><button class="sw" id="bioToggle" type="button" role="switch" aria-checked="false" aria-label="Use fingerprint"></button></div>
+        <button class="set-row act" id="lockNow" type="button"><span class="t">Lock now</span></button>
+        <div class="set-pad">
+          <input type="password" id="offPin" autocomplete="off" placeholder="Current passcode" aria-label="Current passcode">
+          <button class="btn" id="lpTurnOff" type="button">Turn off passcode</button>
+        </div>
       </div>
+      <div class="set-row" id="privSection" hidden><div class="lab"><span class="t">Hide in recent apps</span><span class="s">Keeps your writing off the app switcher</span></div><button class="sw" id="recToggle" type="button" role="switch" aria-checked="true" aria-label="Hide in recent apps"></button></div>
     </div>
-    <div class="section" id="remSection" hidden>
-      <h2>Daily reminder</h2>
-      <p class="fine">A gentle notification at the time you choose, so a day does not slip by unwritten.</p>
-      <p class="fine">The notification never shows your writing. It has Snooze and Dismiss buttons.</p>
-      <p class="remstat" id="remStatus" data-on="false">Off</p>
-      <div class="row"><input type="time" id="remTime" value="21:00" aria-label="Reminder time"><button class="btn" id="remToggle" type="button">Turn on</button></div>
-      <p class="fine" id="remMsg" role="status" aria-live="polite"></p>
+
+    <div id="remSection" hidden>
+      <div class="set-title">Daily reminder</div>
+      <div class="set-group">
+        <div class="set-row"><div class="lab"><span class="t">Remind me</span><span class="s remstat" id="remStatus" data-on="false">Off</span></div><button class="sw" id="remToggle" type="button" role="switch" aria-checked="false" aria-label="Daily reminder"></button></div>
+        <div class="set-row"><div class="lab"><span class="t">Time</span><span class="s">The notification never shows your writing</span></div><input type="time" id="remTime" value="21:00" aria-label="Reminder time"></div>
+      </div>
+      <p class="set-note" id="remMsg" role="status" aria-live="polite"></p>
     </div>
-    <div class="section">
-      <h2>Anonymous app health</h2>
-      <p class="fine">Shares crashes and how fast the app opens, with your phone model and Android version, so problems can be fixed. Never your writing, photos, passcode or account. You can turn it off.</p>
-      <div class="row"><button class="btn" id="telToggle" type="button" aria-pressed="true">Sharing: on</button></div>
+
+    <div class="set-title">Your data</div>
+    <div class="set-group">
+      <button class="set-row act" id="expJson" type="button"><span class="lab"><span class="t">Back up everything</span><span class="s">One file with every entry and photo. Not encrypted, keep it private</span></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+      <button class="set-row act" id="impBtn" type="button"><span class="lab"><span class="t">Restore a backup</span><span class="s">Adds back anything missing, never overwrites</span></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+      <input type="file" id="impFile" accept="application/json,.json" hidden>
+      <div class="set-row"><div class="lab"><span class="t">Share app health</span><span class="s">Crashes and speed only. Never your writing</span></div><button class="sw" id="telToggle" type="button" role="switch" aria-checked="true" aria-label="Share anonymous app health"></button></div>
     </div>
-    <div class="section" id="privSection" hidden>
-      <h2>Privacy</h2>
-      <p class="fine">The home-screen widget and notifications only ever show dates, never your writing. You can also keep Daybook blank in the recent-apps screen.</p>
-      <div class="row"><button class="btn" id="recToggle" type="button" aria-pressed="true">Hidden in recent apps</button></div>
-    </div>
-    <div class="section">
-      <h2>Your data</h2>
-      <p class="fine">A full backup is one file with every entry and photo. Restoring adds back anything missing and never overwrites an entry. The file is not encrypted, so keep it somewhere private. Make one now and then.</p>
-      <div class="row"><button class="btn" id="expJson" type="button">Back up everything</button><button class="btn" id="impBtn" type="button">Restore a backup</button><input type="file" id="impFile" accept="application/json,.json" hidden></div>
-    </div>
-    <div class="section">
-      <h2>Delete account</h2>
-      <button class="btn danger" id="delOpen" type="button">Delete my account and journal</button>
-      <div id="delBox" hidden style="display:grid;gap:12px">
-        <p class="fine">This permanently erases every entry, photo and setting, and your sign-in. It cannot be undone. Back up first if you want a copy.</p>
+
+    <div class="set-title" id="supportSec" hidden>Support</div>
+    <div class="set-group" id="supportGrp" hidden>
+      <div class="set-row"><div class="lab"><span class="t">Support Daybook</span><span class="s">Free, with no ads. Telling a friend helps too</span><span class="s" id="upiNote"></span></div><a class="btn" id="upiPay" href="#">Support with UPI</a></div>
+          </div>
+
+    <div class="set-title">Delete</div>
+    <div class="set-group">
+      <div class="set-row"><div class="lab"><span class="t">Delete account</span><span class="s">Erases every entry and photo. Cannot be undone</span></div><button class="btn danger" id="delOpen" type="button">Delete</button></div>
+      <div id="delBox" class="set-pad" hidden>
+        <p class="fine">Back up first if you want a copy. This also deletes your sign-in.</p>
         <input type="password" id="delPass" autocomplete="current-password" placeholder="Your password" aria-label="Your password" hidden>
         <p class="fine" id="delGoogle" hidden>You will be asked to confirm with Google.</p>
         <div class="row"><button class="btn danger solid" id="delGo" type="button">Erase everything</button><button class="btn" id="delCancel" type="button">Cancel</button></div>
       </div>
-    </div>
-    <div class="section" id="supportSec" hidden>
-      <h2>Support Daybook</h2>
-      <p class="fine">Free, with no ads. If Daybook has been useful, you can support it here. Telling a friend helps just as much.</p>
-      <div class="row"><a class="btn" id="upiPay" href="#">Support with UPI</a></div>
-      <p class="fine" id="upiNote"></p>
     </div>
     <p class="fine legal"><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a><span id="getApp2"> · <a href="download.html">Android app</a></span></p>
     <p class="fine" id="verLine" hidden></p>

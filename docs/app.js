@@ -84,7 +84,7 @@ async function boot() {
 let acctProvider = 'password';
 async function onAuth(user) {
   if (!user) { teardown(); gate('#signin'); return; }
-  $('#acct').textContent = 'Signed in as ' + user.email;
+  $('#acct').textContent = user.email;
   acctProvider = user.provider || 'password';
   try {
     lockData = await store.getSetting('lock');
@@ -315,7 +315,7 @@ $('#lockBtn').addEventListener('click', () => {
 $('#lpClose').addEventListener('click', closePanel);
 function renderTelemetry() {
   const on = telemetryOn();
-  $('#telToggle').setAttribute('aria-pressed', String(on)); $('#telToggle').textContent = on ? 'Sharing: on' : 'Sharing: off';
+  $('#telToggle').setAttribute('aria-checked', String(on));
 }
 $('#telToggle').addEventListener('click', () => { setTelemetry(!telemetryOn()); renderTelemetry(); });
 async function renderDevice() {
@@ -323,10 +323,10 @@ async function renderDevice() {
   const d = devicePrefs();
   $('#lockAfter').value = String(d.lockAfter);
   $('#privSection').hidden = !isNative();
-  $('#recToggle').setAttribute('aria-pressed', String(d.recents)); $('#recToggle').textContent = d.recents ? 'Hidden in recent apps' : 'Shown in recent apps';
+  $('#recToggle').setAttribute('aria-checked', String(d.recents));
   const bio = isNative() && await bioAvailable();
   $('#bioRow').hidden = !bio;
-  $('#bioToggle').setAttribute('aria-pressed', String(d.bio && bio)); $('#bioToggle').textContent = d.bio && bio ? 'Fingerprint on' : 'Use fingerprint';
+  $('#bioToggle').setAttribute('aria-checked', String(!!(d.bio && bio)));
 }
 $('#lockAfter').addEventListener('change', () => { const d = devicePrefs(); d.lockAfter = Number($('#lockAfter').value); saveDevicePrefs(d); $('#lpMsg').textContent = 'Saved.'; });
 $('#recToggle').addEventListener('click', () => { const d = devicePrefs(); d.recents = !d.recents; saveDevicePrefs(d); setRecentsPrivacy(d.recents); renderDevice(); });
@@ -342,7 +342,7 @@ function renderReminder() {
   const r = reminderPrefs(); $('#remTime').value = r.time;
   $('#remStatus').textContent = r.on ? 'On: every day at ' + niceTime(r.time) : 'Off';
   $('#remStatus').dataset.on = String(r.on);
-  $('#remToggle').textContent = r.on ? 'Turn off' : 'Turn on';
+  $('#remToggle').setAttribute('aria-checked', String(r.on));
 }
 async function applyReminder(on) {
   const msg = $('#remMsg'); msg.textContent = ''; $('#remToggle').disabled = true;
@@ -898,7 +898,7 @@ boot();
     row.appendChild(el);
   });
   if (!links.upiId) return;
-  $('#supportSec').hidden = false;
+  $('#supportSec').hidden = false; $('#supportGrp').hidden = false;
   $('#upiPay').href = 'upi://pay?pa=' + encodeURIComponent(links.upiId) + '&pn=' + encodeURIComponent(links.upiName || 'Daybook') + '&cu=INR&tn=' + encodeURIComponent('Support Daybook');
   $('#upiNote').textContent = 'UPI ID: ' + links.upiId;
 })();
@@ -911,11 +911,15 @@ boot();
     if (on) r.setAttribute('data-view', 'readable'); else r.removeAttribute('data-view');
     const b = $('#viewBtn'), b2 = $('#viewBtn2');
     if (b) b.setAttribute('aria-pressed', String(on));
+    const vc = $('#vsClassic'), ve = $('#vsEasy');
+    if (vc) vc.setAttribute('aria-pressed', String(!on)); if (ve) ve.setAttribute('aria-pressed', String(on));
     if (b2) { b2.setAttribute('aria-pressed', String(on)); b2.textContent = on ? 'Easy reading: on' : 'Easy reading: off'; }
     requestAnimationFrame(() => { try { autosize(); } catch (e) {} });
   };
   const choose = (on) => { try { localStorage.setItem('daybook.view', on ? 'readable' : 'classic'); } catch (e) {} apply(on); };
   apply(get() === 'readable');
+  const vc0 = $('#vsClassic'), ve0 = $('#vsEasy');
+  if (vc0) vc0.addEventListener('click', () => choose(false)); if (ve0) ve0.addEventListener('click', () => choose(true));
   ['#viewBtn', '#viewBtn2'].forEach((s) => { const el = $(s); if (el) el.addEventListener('click', () => choose(document.documentElement.getAttribute('data-view') !== 'readable')); });
   const box = $('#viewChoice');
   if (box && get() === null) {
