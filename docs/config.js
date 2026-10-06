@@ -15,9 +15,9 @@ export const config = {
 // Creator links shown in Settings. Leave a value empty to hide that button.
 export const links = {
   email: 'geosubash@gmail.com',
-  instagram: '',   // e.g. https://instagram.com/yourname
-  linkedin: '',    // e.g. https://www.linkedin.com/in/yourname
-  behance: '',     // e.g. https://www.behance.net/yourname
-  upiId: '',       // e.g. yourname@okaxis  (shown with a Pay with UPI button)
-  upiName: 'Geo'
+  instagram: 'https://www.instagram.com/geo.subash',
+  linkedin: 'https://www.linkedin.com/in/geo-subash-816a911ba',
+  behance: 'https://www.behance.net/geosubash',
+  upiId: 'geosubash@okaxis',
+  upiName: 'geo subash'
 };
