@@ -11,3 +11,13 @@ export const config = {
     appId: '1:832652150721:web:64442c71a3b87475519140'
   }
 };
+
+// Creator links shown in Settings. Leave a value empty to hide that button.
+export const links = {
+  email: 'geosubash@gmail.com',
+  instagram: '',   // e.g. https://instagram.com/yourname
+  linkedin: '',    // e.g. https://www.linkedin.com/in/yourname
+  behance: '',     // e.g. https://www.behance.net/yourname
+  upiId: '',       // e.g. yourname@okaxis  (shown with a Pay with UPI button)
+  upiName: 'Geo'
+};

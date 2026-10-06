@@ -77,6 +77,7 @@ button { cursor: pointer; }
 .btn.primary { background: var(--ink); color: var(--ink-on); }
 .btn.primary:hover:not(:disabled) { opacity: .85; }
 select, input[type="date"], input[type="search"], input[type="password"], input[type="email"], input[type="text"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3); height: 44px; max-width: 100%; }
+a.btn { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
 .row { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
 
 /* date + navigation */
@@ -414,7 +415,18 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
         <div class="row"><button class="btn danger solid" id="delGo" type="button">Erase everything</button><button class="btn" id="delCancel" type="button">Cancel</button></div>
       </div>
     </div>
-    <p class="fine legal"><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a> · <a href="mailto:geosubash@gmail.com">Contact</a><span id="getApp2"> · <a href="download.html">Android app</a></span></p>
+    <div class="section" id="aboutSec">
+      <h2>Made by Geo</h2>
+      <p class="fine">Daybook is made and looked after by one person. Say hello, or follow along.</p>
+      <div class="row" id="socialRow"></div>
+    </div>
+    <div class="section" id="supportSec" hidden>
+      <h2>Support Daybook</h2>
+      <p class="fine">Daybook is free, with no ads. If it is useful to you, you can chip in to keep it going. It is never required.</p>
+      <div class="row"><a class="btn" id="upiPay" href="#" hidden>Pay with UPI</a><button class="btn" id="upiCopy" type="button" hidden>Copy UPI ID</button></div>
+      <p class="fine" id="upiNote"></p>
+    </div>
+    <p class="fine legal"><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a><span id="getApp2"> · <a href="download.html">Android app</a></span></p>
     <p class="msg" id="lpMsg" aria-live="polite"></p>
   </section>
 

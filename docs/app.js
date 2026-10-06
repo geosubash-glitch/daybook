@@ -1,4 +1,4 @@
-import { config } from './config.js';
+import { config, links } from './config.js';
 import { correct, fixError } from './grammar.js';
 import { initTelemetry, track, telemetryOn, setTelemetry } from './telemetry.js';
 import { isNative, haptic, onBack, reminderPrefs, setReminder, saveReminderTime, initNotificationActions, bioAvailable, bioAuth, setRecentsPrivacy, devicePrefs, saveDevicePrefs, setWidgetDays, clearWidget } from './native.js';
@@ -439,11 +439,11 @@ function loadEditor() {
   photos = (e.photos || []).slice();
   undoInfo = null; $('#undo').hidden = true; lastFixed = ''; clearTimeout(fixTimer);
   renderPhotos(); autosize(); updateWc();
-  setStatus(hasContent(e) ? 'saved' : '');
+  setStatus('');
 }
 function touch() {
   if (!editable) return;
-  dirty = true; setStatus('Saving…'); renderSync();
+  dirty = true; setStatus(''); renderSync();
   clearTimeout(timer); timer = setTimeout(flush, 900);
 }
 function flush() {
@@ -467,7 +467,7 @@ async function persist(e) {
   noteWidget(e.date, hasContent(data));
   store.setEntry(e.date, data).then(() => {
     pending--; delete failedWrites[e.date]; if (!Object.keys(failedWrites).length) syncFailed = false;
-    if (!pending && !dirty && cur === e.date) setStatus('saved');
+    if (!pending && !dirty && cur === e.date) setStatus('');
     renderSync();
   }).catch(() => { pending--; failedWrites[e.date] = data; syncFailed = true; renderSync(); });
 }
@@ -886,3 +886,21 @@ $('#range').value = 'month';
 const t0 = parseKey(cur); calM = { y: t0.getFullYear(), m: t0.getMonth() };
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 boot();
+
+// Creator links and the support section in Settings. Empty values stay hidden.
+(function creatorLinks() {
+  const row = $('#socialRow'); if (!row) return;
+  [['Instagram', links.instagram], ['LinkedIn', links.linkedin], ['Behance', links.behance], ['Email', links.email && 'mailto:' + links.email]].forEach(([name, href]) => {
+    if (!href) return;
+    const el = document.createElement('a'); el.className = 'btn'; el.textContent = name; el.href = href;
+    if (/^https?:/.test(href)) { el.target = '_blank'; el.rel = 'noopener noreferrer'; }
+    row.appendChild(el);
+  });
+  if (!links.upiId) return;
+  $('#supportSec').hidden = false;
+  const pay = $('#upiPay'), copy = $('#upiCopy'), note = $('#upiNote');
+  pay.href = 'upi://pay?pa=' + encodeURIComponent(links.upiId) + '&pn=' + encodeURIComponent(links.upiName || 'Daybook') + '&cu=INR&tn=' + encodeURIComponent('Support Daybook');
+  pay.hidden = false; copy.hidden = false;
+  note.textContent = 'UPI ID: ' + links.upiId + '. Opens your UPI app (GPay, PhonePe, Paytm). You choose the amount.';
+  copy.addEventListener('click', async () => { try { await navigator.clipboard.writeText(links.upiId); copy.textContent = 'Copied'; } catch (e) { copy.textContent = links.upiId; } setTimeout(() => { copy.textContent = 'Copy UPI ID'; }, 2000); });
+})();
