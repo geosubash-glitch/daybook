@@ -890,9 +890,10 @@ boot();
 // Creator links and the support section in Settings. Empty values stay hidden.
 (function creatorLinks() {
   const row = $('#socialRow'); if (!row) return;
-  [['Instagram', links.instagram], ['LinkedIn', links.linkedin], ['Behance', links.behance], ['Email', links.email && 'mailto:' + links.email]].forEach(([name, href]) => {
+  [['instagram', 'Instagram', links.instagram], ['linkedin', 'LinkedIn', links.linkedin], ['behance', 'Behance', links.behance], ['mail', 'Email', links.email && 'mailto:' + links.email]].forEach(([id, name, href]) => {
     if (!href) return;
-    const el = document.createElement('a'); el.className = 'btn'; el.textContent = name; el.href = href;
+    const el = document.createElement('a'); el.className = 'btn icon'; el.href = href; el.title = name; el.setAttribute('aria-label', name);
+    el.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-' + id + '"/></svg>';
     if (/^https?:/.test(href)) { el.target = '_blank'; el.rel = 'noopener noreferrer'; }
     row.appendChild(el);
   });
