@@ -436,51 +436,8 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     </div>
     <div class="section" id="supportSec" hidden>
       <h2>Support Daybook</h2>
-      <p class="fine">Daybook is free, with no ads. If it is useful to you, you can chip in to keep it going. It is never required.</p>
-      <div class="row"><a class="btn" id="upiPay" href="#" hidden>Pay with UPI</a><button class="btn" id="upiCopy" type="button" hidden>Copy UPI ID</button></div>
+      <div class="row"><a class="btn" id="upiPay" href="#">Pay with UPI</a></div>
       <p class="fine" id="upiNote"></p>
-    </div>
-    <p class="fine legal"><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a><span id="getApp2"> · <a href="download.html">Android app</a></span></p>
-    <p class="msg" id="lpMsg" aria-live="polite"></p>
-  </section>
-
-  <section class="browse" id="browse" hidden aria-label="Browse your journal">
-    <div>
-      <h2>Calendar</h2>
-      <div class="calhead">
-        <div class="selgrp">
-          <select id="mSel" aria-label="Month"></select>
-          <select id="ySel" aria-label="Year"></select>
-        </div>
-        <div class="group">
-          <button class="ibtn" id="mPrev" type="button" aria-label="Previous month"><svg class="ic"><use href="#i-left"/></svg></button>
-          <button class="ibtn" id="mNext" type="button" aria-label="Next month"><svg class="ic"><use href="#i-right"/></svg></button>
-        </div>
-      </div>
-      <div class="cal" id="cal"></div>
-      <p class="count" id="count"></p>
-    </div>
-    <div>
-      <h2>Search</h2>
-      <input type="search" id="q" placeholder="A word or a title" aria-label="Search entries">
-      <p class="hint" id="qInfo" style="margin:8px 0 0"></p>
-      <ul class="list" id="results"></ul>
-      <h2 style="margin-top:32px">On this day</h2>
-      <ul class="list" id="otd"></ul>
-    </div>
-  </section>
-
-  <main>
-    <div class="dateblock">
-      <div>
-        <div class="wk" id="dWeek"></div>
-        <div class="date" id="dDate"></div>
-        <div class="meta"><span id="dMeta"></span><button class="link" id="today" type="button" hidden>Back to today</button></div>
-      </div>
-      <div class="group" role="group" aria-label="Change day">
-        <button class="ibtn" id="prev" type="button" aria-label="Previous day" title="Previous day"><svg class="ic"><use href="#i-left"/></svg></button>
-        <button class="ibtn" id="next" type="button" aria-label="Next day" title="Next day"><svg class="ic"><use href="#i-right"/></svg></button>
-      </div>
     </div>
 
 

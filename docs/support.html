@@ -49,23 +49,14 @@ code { font:500 .85rem ui-monospace, Menlo, Consolas, monospace; word-break:brea
 <body><main>
 <div class="top"><a class="brand" href="index.html">Daybook</a><a class="back" href="index.html">Open Daybook</a></div>
 <h1>Support Daybook</h1>
-<p class="lead">Daybook is free, with no ads and no tracking of what you write. If it is useful to you, you can help keep it going. It is never required.</p>
-<h2>Pay with UPI</h2>
-<div class="row"><a class="btn" id="pay" href="upi://pay?pa=geosubash@okaxis&amp;pn=geo%20subash&amp;cu=INR&amp;tn=Support%20Daybook">Pay with UPI</a><button class="btn" id="copy" type="button">Copy UPI ID</button></div>
-<p class="fine">UPI ID: <b>geosubash@okaxis</b>. You choose the amount. On a phone the button opens GPay, PhonePe or Paytm. On a computer, scan the code with your phone.</p>
-<img class="qr" src="icons/support-qr.svg" alt="UPI QR code for geosubash@okaxis" width="200" height="200">
-<h2>Follow and say hello</h2>
-<div class="row">
+<div class="row"><a class="btn" id="pay" href="upi://pay?pa=geosubash@okaxis&amp;pn=geo%20subash&amp;cu=INR&amp;tn=Support%20Daybook">Pay with UPI</a></div>
+<img class="qr" src="icons/support-qr.svg" alt="UPI QR code" width="200" height="200">
+<p class="fine">geosubash@okaxis</p>
+<div class="row" style="margin-top:32px">
 <a class="btn" href="https://www.instagram.com/geo.subash" target="_blank" rel="noopener noreferrer">Instagram</a>
 <a class="btn" href="https://www.linkedin.com/in/geo-subash-816a911ba" target="_blank" rel="noopener noreferrer">LinkedIn</a>
 <a class="btn" href="https://www.behance.net/geosubash" target="_blank" rel="noopener noreferrer">Behance</a>
 <a class="btn" href="mailto:geosubash@gmail.com">Email</a>
 </div>
 <p class="fine" style="margin-top:32px"><a href="download.html">Android app</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
-<script>
-document.getElementById('copy').addEventListener('click', async function () {
-  var b = this; try { await navigator.clipboard.writeText('geosubash@okaxis'); b.textContent = 'Copied'; } catch (e) { b.textContent = 'geosubash@okaxis'; }
-  setTimeout(function () { b.textContent = 'Copy UPI ID'; }, 2000);
-});
-</script>
 </main></body></html>
