@@ -1,7 +1,7 @@
 // Online storage: Firebase Authentication + Cloud Firestore (free Spark plan).
 // This is the only file that talks to Firebase. To move Daybook to another
 // database someday, write a new store with the same functions as this one.
-import { initializeApp } from './vendor/firebase.js';
+import { initializeApp, initializeAppCheck, ReCaptchaV3Provider } from './vendor/firebase.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, signInWithCredential, EmailAuthProvider, reauthenticateWithCredential, reauthenticateWithPopup, deleteUser }
   from './vendor/firebase.js';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, getFirestore, waitForPendingWrites, addDoc, collection, doc, getDoc, getDocs, setDoc, deleteDoc, writeBatch, query, where, orderBy, limit, onSnapshot, getCountFromServer }
@@ -39,6 +39,11 @@ function gisToken(clientId) {
 
 export function createStore(cfg) {
   const app = initializeApp(cfg.firebase);
+  // App Check proves requests come from the real Daybook site and not a copy. It is off until a reCAPTCHA v3 site key
+  // is put in config.js (appCheckKey). The Android app does not use it yet; see SECURITY.md before turning enforcement on.
+  if (cfg.firebase.appCheckKey && !nativeAuth()) {
+    try { initializeAppCheck(app, { provider: new ReCaptchaV3Provider(cfg.firebase.appCheckKey), isTokenAutoRefreshEnabled: true }); } catch (e) {}
+  }
   const auth = getAuth(app);
   // Offline support: writes made without internet are kept in the browser's database and
   // uploaded automatically when the connection returns. The online copy remains the real one.
