@@ -47,6 +47,7 @@ jobs:
           grep -n biometric android/app/build.gradle
           npx cap sync android
           rm -rf android/app/src/main/assets/public/media   # promo video is for the website only, keep it out of the app
+          sed -i "s/__BUILD__/v1.$(( ${{ github.run_number }} - 7 ))/" android/app/src/main/assets/public/app.js
       - name: Build and sign
         working-directory: android
         env:

@@ -926,3 +926,18 @@ boot();
     setTimeout(() => { try { $('#vcClassic').focus(); } catch (e) {} }, 50);
   }
 })();
+
+// Version label in Settings, and a one-time clean-out of saved pages when the app version changes so nothing old lingers.
+(function buildStamp() {
+  const BUILD = '__BUILD__';
+  if (BUILD.startsWith('__')) return;
+  const v = $('#verLine'); if (v) { v.textContent = 'Version ' + BUILD.replace(/^v/, ''); v.hidden = false; }
+  try {
+    if (localStorage.getItem('daybook.build') === BUILD) return;
+    localStorage.setItem('daybook.build', BUILD);
+    const jobs = [];
+    if (window.caches) jobs.push(caches.keys().then((ks) => Promise.all(ks.map((k) => caches.delete(k)))));
+    if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then((rs) => Promise.all(rs.map((r) => r.unregister()))));
+    Promise.all(jobs).then(() => { if (jobs.length) location.reload(); }).catch(() => {});
+  } catch (e) {}
+})();
