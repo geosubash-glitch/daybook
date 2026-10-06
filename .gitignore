@@ -1,0 +1,18 @@
+node_modules/
+*.log
+.DS_Store
+.env
+.env.*
+# Signing material must never be committed.
+*.jks
+*.keystore
+signing/*.properties
+android/local.properties
+android/app/build/
+android/build/
+android/.gradle/
+.firebase/
+firebase-debug.log
+firestore-debug.log
+coverage/
+t/out/

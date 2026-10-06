@@ -1,4 +1,5 @@
 import { config, links } from './config.js';
+import { createEncryptedStore, newRecoveryKey, MIN_PASSPHRASE } from './e2ee.js';
 import { correct, fixError } from './grammar.js';
 import { initTelemetry, track, telemetryOn, setTelemetry } from './telemetry.js';
 import { isNative, haptic, onBack, reminderPrefs, setReminder, saveReminderTime, initNotificationActions, bioAvailable, bioAuth, setRecentsPrivacy, devicePrefs, saveDevicePrefs, setWidgetDays, clearWidget } from './native.js';
@@ -60,9 +61,9 @@ let autoFix = false, fixBusy = false, fixTimer = null, undoInfo = null, lastFixe
 
 /* ---------- screens ---------- */
 function gate(name) {
-  ['#setup', '#signin', '#lock'].forEach((s) => { $(s).hidden = s !== name; });
+  ['#setup', '#signin', '#lock', '#encLock'].forEach((s) => { $(s).hidden = s !== name; });
   $('#shell').hidden = name !== null && name !== '#shell';
-  if (name === '#shell') ['#setup', '#signin', '#lock'].forEach((s) => { $(s).hidden = true; });
+  if (name === '#shell') ['#setup', '#signin', '#lock', '#encLock'].forEach((s) => { $(s).hidden = true; });
 }
 function setStatus(t) {
   const s = $('#status');
@@ -77,7 +78,8 @@ async function boot() {
   if (config.backend === 'firebase' && /PASTE_/.test(JSON.stringify(config.firebase))) { gate('#setup'); return; }
   try {
     const mod = await import(config.backend === 'memory' ? './store-memory.js' : './store-firebase.js');
-    store = mod.createStore(config);
+    store = createEncryptedStore(mod.createStore(config));
+    try { store.enc.setRemember(localStorage.getItem('daybook.remember') !== '0'); } catch (e) {}
   } catch (e) { gate('#signin'); $('#siErr').textContent = 'Could not load the database. Check your connection and reload.'; return; }
   store.onAuth(onAuth);
 }
@@ -87,15 +89,23 @@ async function onAuth(user) {
   $('#acct').textContent = user.email;
   acctProvider = user.provider || 'password';
   try {
-    const [lk, pf] = await Promise.all([store.getSetting('lock'), store.getSetting('prefs')]);
+    const [lk, pf, kd] = await Promise.all([store.getSetting('lock'), store.getSetting('prefs'), store.getSetting('keys')]);
     lockData = lk; prefs = pf || {};
+    await store.enc.attach(kd, user.uid);
   } catch (e) {
     teardown(); gate('#signin');
     $('#siErr').textContent = 'Signed in, but the journal could not be reached. Check your connection and that the Firestore rules were published.';
     return;
   }
   autoFix = !!prefs.autoFix && grammarOk(); setAutoUi();
-  if (lockData && lockData.hash && hasCrypto) showLock(); else start();
+  if (lockData && lockData.hash && hasCrypto) showLock(); else afterLock();
+}
+// After the app lock (if any): the encryption key must be available before the journal opens.
+async function afterLock() {
+  const s = store.enc.status();
+  if (s === 'needs-key') { gate('#encLock'); $('#encPass').value = ''; return; }
+  if (s === 'migrating') { start(); openEncSetup(true); return; }
+  start();
 }
 function teardown() {
   if (widgetDays) { widgetDays = null; clearWidget(); }
@@ -262,7 +272,7 @@ async function tryBio(auto) {
   if (await bioAuth('Unlock Daybook')) { failCount = 0; $('#lockPin').value = ''; hideLock(); }
 }
 $('#lockBio').addEventListener('click', () => tryBio(false));
-function hideLock() { gate('#shell'); start(); }
+function hideLock() { afterLock(); }
 async function lockNow() {
   if (!lockData || !started) return;
   await flush(); closeLightbox();
@@ -301,6 +311,81 @@ $('#recForm').addEventListener('submit', async (ev) => {
     hideLock();
   } catch (e) { $('#recErr').textContent = 'Could not save the new passcode. Check your connection.'; }
 });
+
+/* ---------- encryption ---------- */
+const encBusy = (b) => { $('#esForm').hidden = b !== 'form'; $('#esBusy').hidden = b !== 'busy'; $('#esDone').hidden = b !== 'done'; };
+let esKey = '', esBackedUp = false;
+function renderEnc() {
+  const on = store.enc.isOn();
+  $('#encOpen').hidden = on; $('#encOnBox').hidden = !on;
+  $('#encRemember').setAttribute('aria-checked', String(store.enc.isRemembered()));
+  $('#encChangeBox').hidden = true;
+}
+function esCheck() {
+  const ok = $('#esKeySaved').checked && esBackedUp && $('#esBackupSaved').checked && $('#esPass').value.length >= MIN_PASSPHRASE && $('#esPass').value === $('#esPass2').value;
+  $('#esGo').disabled = !ok;
+}
+function openEncSetup(resume) {
+  closePanel();
+  $('#encSetup').hidden = false;
+  if (resume) { encBusy('busy'); runMigrate(); return; }
+  esKey = newRecoveryKey(); esBackedUp = false;
+  $('#esKey').textContent = esKey;
+  ['#esKeySaved', '#esBackupSaved'].forEach((s) => { $(s).checked = false; });
+  ['#esPass', '#esPass2'].forEach((s) => { $(s).value = ''; });
+  $('#esMsg').textContent = ''; encBusy('form'); esCheck();
+}
+async function runMigrate() {
+  try {
+    const n = await store.enc.migrate((i, total) => { $('#esProg').textContent = 'Encrypting ' + i + ' of ' + total + '…'; });
+    $('#esDoneMsg').textContent = 'Done. ' + n + ' items are encrypted.'; encBusy('done');
+  } catch (e) {
+    $('#esMsg').textContent = 'It stopped before finishing. Your writing is safe. Open Settings and choose Encrypt again to resume.';
+    encBusy('form');
+    $('#esForm').hidden = false;
+  }
+}
+$('#encOpen').addEventListener('click', () => { if (!navigator.onLine) { $('#lpMsg').textContent = 'Connect to the internet first.'; return; } openEncSetup(false); });
+$('#esClose').addEventListener('click', () => { $('#encSetup').hidden = true; });
+$('#esDoneBtn').addEventListener('click', () => { $('#encSetup').hidden = true; });
+['#esKeySaved', '#esBackupSaved', '#esPass', '#esPass2'].forEach((s) => $(s).addEventListener('input', esCheck));
+$('#esCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(esKey); $('#esMsg').textContent = 'Copied.'; } catch (e) { $('#esMsg').textContent = 'Could not copy. Select the key and copy it.'; } });
+$('#esSaveKey').addEventListener('click', async () => { try { await saveFile('daybook-recovery-key.txt', 'Daybook recovery key\n' + esKey + '\n\nKeep this private. With it, anyone can open your journal.\n', 'text/plain'); } catch (e) { $('#esMsg').textContent = 'Could not save the file.'; } });
+$('#esBackup').addEventListener('click', async () => { await runBackup(); esBackedUp = true; $('#esMsg').textContent = $('#lpMsg').textContent; esCheck(); });
+$('#esGo').addEventListener('click', async () => {
+  $('#esGo').disabled = true; encBusy('busy'); $('#esProg').textContent = 'Setting up…';
+  try { await store.enc.setup($('#esPass').value, esKey); } catch (e) { $('#esMsg').textContent = 'Could not set up encryption. Check your connection.'; encBusy('form'); esCheck(); return; }
+  $('#esPass').value = $('#esPass2').value = '';
+  await runMigrate();
+});
+$('#encRemember').addEventListener('click', async () => {
+  const on = $('#encRemember').getAttribute('aria-checked') !== 'true';
+  try { await store.enc.setRemember(on); localStorage.setItem('daybook.remember', on ? '1' : '0'); } catch (e) {}
+  $('#encRemember').setAttribute('aria-checked', String(on));
+});
+$('#encChange').addEventListener('click', () => { $('#encChangeBox').hidden = !$('#encChangeBox').hidden; });
+$('#ecGo').addEventListener('click', async () => {
+  const o = $('#ecOld').value, n = $('#ecNew').value;
+  if (n.length < MIN_PASSPHRASE) { $('#lpMsg').textContent = 'Use a passphrase of ' + MIN_PASSPHRASE + ' or more characters.'; return; }
+  try { await store.enc.changePassphrase(o, 'passphrase', n); $('#ecOld').value = $('#ecNew').value = ''; $('#encChangeBox').hidden = true; $('#lpMsg').textContent = 'Passphrase changed.'; }
+  catch (e) { $('#lpMsg').textContent = 'That is not your current passphrase.'; }
+});
+$('#encForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault(); $('#encErr').textContent = 'Unlocking…';
+  try { await store.enc.unlock($('#encPass').value, 'passphrase'); $('#encPass').value = ''; $('#encErr').textContent = ''; afterLock(); }
+  catch (e) { $('#encErr').textContent = 'That is not the passphrase.'; }
+});
+$('#encForgot').addEventListener('click', () => { $('#encForm').hidden = true; $('#encRecForm').hidden = false; });
+$('#encRecBack').addEventListener('click', () => { $('#encRecForm').hidden = true; $('#encForm').hidden = false; });
+$('#encOut').addEventListener('click', async () => { try { await store.signOut(); } catch (e) {} });
+$('#encRecForm').addEventListener('submit', async (ev) => {
+  ev.preventDefault();
+  const nw = $('#encNewPass').value;
+  if (nw.length < MIN_PASSPHRASE) { $('#encRecErr').textContent = 'Use a passphrase of ' + MIN_PASSPHRASE + ' or more characters.'; return; }
+  $('#encRecErr').textContent = 'Unlocking…';
+  try { await store.enc.changePassphrase($('#encRecKey').value.trim().toUpperCase(), 'recovery', nw); $('#encRecKey').value = $('#encNewPass').value = ''; $('#encRecErr').textContent = ''; $('#encRecForm').hidden = true; $('#encForm').hidden = false; afterLock(); }
+  catch (e) { $('#encRecErr').textContent = 'That recovery key is not right.'; }
+});
 function renderLockPanel() {
   $('#lpOff').hidden = !hasCrypto || !!lockData;
   $('#lpOnBox').hidden = !hasCrypto || !lockData;
@@ -310,7 +395,7 @@ function closePanel() { resetDelete(); $('#lockPanel').hidden = true; $('#lockBt
 $('#lockBtn').addEventListener('click', () => {
   const p = $('#lockPanel'); p.hidden = !p.hidden;
   $('#lockBtn').setAttribute('aria-expanded', String(!p.hidden));
-  if (!p.hidden) { closeExport(); closeBrowse(); renderLockPanel(); renderReminder(); renderDevice(); }
+  if (!p.hidden) { closeExport(); closeBrowse(); renderEnc(); renderLockPanel(); renderReminder(); renderDevice(); }
 });
 $('#lpClose').addEventListener('click', closePanel);
 function renderTelemetry() {

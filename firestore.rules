@@ -11,6 +11,14 @@ service cloud.firestore {
     function hasAll(list) { return request.resource.data.keys().hasAll(list); }
     function text(field, max) { return request.resource.data[field] is string && request.resource.data[field].size() <= max; }
 
+    // True once the person has finished turning on encryption. After that, plain text can no longer be written.
+    function encDone(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid)/settings/keys)
+        && get(/databases/$(database)/documents/users/$(uid)/settings/keys).data.done == true;
+    }
+    function b64(field, max) { return text(field, max) && request.resource.data[field].matches('^[A-Za-z0-9+/=]+$'); }
+    function isDay(day) { return day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') && day >= '1900-01-01' && day <= '2100-12-31'; }
+
     match /users/{uid} {
 
       // One document per day. The id is the date, for example 2026-10-04.
@@ -18,15 +26,20 @@ service cloud.firestore {
         allow read: if isOwner(uid);
         allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
-          && day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
-          && fields(['date', 'title', 'body', 'photos', 'updated'])
-          && hasAll(['date', 'title', 'body', 'photos', 'updated'])
+          && isDay(day)
           && request.resource.data.date == day
-          && text('title', 500)
-          && text('body', 200000)
           && request.resource.data.photos is list
           && request.resource.data.photos.size() <= 24
-          && request.resource.data.updated is number;
+          && request.resource.data.updated is number
+          && (
+            // Encrypted entry: the text is scrambled, the database cannot read it.
+            (fields(['date', 'photos', 'updated', 'v', 'iv', 'ct']) && hasAll(['date', 'photos', 'updated', 'v', 'iv', 'ct'])
+              && request.resource.data.v == 1 && b64('iv', 32) && b64('ct', 700000))
+            ||
+            // Plain entry: only while encryption is off or still being switched on.
+            (fields(['date', 'title', 'body', 'photos', 'updated']) && hasAll(['date', 'title', 'body', 'photos', 'updated'])
+              && text('title', 500) && text('body', 200000) && !encDone(uid))
+          );
       }
 
       // Scanned page photos, stored as small compressed images.
@@ -35,12 +48,17 @@ service cloud.firestore {
         allow delete: if isOwner(uid);
         allow create, update: if isOwner(uid)
           && photoId.size() <= 80
-          && fields(['data', 'date', 'created'])
-          && hasAll(['data', 'date', 'created'])
-          && text('data', 850000)
-          && request.resource.data.data.matches('^data:image/(jpeg|png|webp);base64,.*')
           && text('date', 10)
-          && request.resource.data.created is number;
+          && request.resource.data.created is number
+          && (
+            (fields(['v', 'iv', 'ct', 'date', 'created']) && hasAll(['v', 'iv', 'ct', 'date', 'created'])
+              && request.resource.data.v == 1 && b64('iv', 32) && b64('ct', 850000))
+            ||
+            (fields(['data', 'date', 'created']) && hasAll(['data', 'date', 'created'])
+              && text('data', 850000)
+              && request.resource.data.data.matches('^data:image/(jpeg|png|webp);base64,.*')
+              && !encDone(uid))
+          );
       }
 
       // Two small settings documents: the passcode check and the preferences.
@@ -54,6 +72,17 @@ service cloud.firestore {
             ||
             (name == 'prefs' && fields(['autoFix'])
               && (!('autoFix' in request.resource.data) || request.resource.data.autoFix is bool))
+            ||
+            // The encryption keys, already wrapped: useless without the passphrase or the recovery key.
+            (name == 'keys' && fields(['v', 'iter', 'salt', 'iv', 'wrapped', 'rsalt', 'riv', 'rwrapped', 'done', 'created'])
+              && hasAll(['v', 'iter', 'salt', 'iv', 'wrapped', 'rsalt', 'riv', 'rwrapped', 'done', 'created'])
+              && request.resource.data.v == 1 && request.resource.data.iter is number
+              && request.resource.data.iter >= 100000 && request.resource.data.iter <= 5000000
+              && b64('salt', 64) && b64('iv', 32) && b64('wrapped', 200)
+              && b64('rsalt', 64) && b64('riv', 32) && b64('rwrapped', 200)
+              && request.resource.data.done is bool && request.resource.data.created is number
+              // Once finished, the keys can be re-wrapped (change passphrase) but never switched back to unfinished.
+              && (request.resource.data.done == true || !(resource != null && resource.data.done == true)))
           );
       }
     }
@@ -66,6 +95,7 @@ service cloud.firestore {
         && request.resource.data.keys().hasAll(['iid', 't', 'ev', 'v', 'plat', 'os'])
         && request.resource.data.iid is string && request.resource.data.iid.size() <= 40
         && request.resource.data.t is number
+        && request.resource.data.t > 1700000000000 && request.resource.data.t < 4100000000000
         && request.resource.data.ev is string && request.resource.data.ev.size() <= 30
         && request.resource.data.v is string && request.resource.data.v.size() <= 20
         && request.resource.data.plat is string && request.resource.data.plat.size() <= 10

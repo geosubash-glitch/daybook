@@ -9,8 +9,8 @@ export function createStore(cfg) {
   const fire = () => watchers.forEach((w) => w());
   return {
     onAuth(cb) { authCb = cb; setTimeout(() => cb(user), 0); return () => {}; },
-    async signIn(email) { user = { email }; authCb(user); },
-    async signInGoogle() { user = { email: 'you@gmail.com' }; authCb(user); },
+    async signIn(email) { user = { email, uid: 'mem' }; authCb(user); },
+    async signInGoogle() { user = { email: 'you@gmail.com', uid: 'mem' }; authCb(user); },
     async deleteAccount() { entries.clear(); settings.clear(); photos.clear(); user = null; authCb(null); },
     async signOut() { user = null; authCb(null); },
     async resetPassword() {},
@@ -21,7 +21,7 @@ export function createStore(cfg) {
     async getRange(a, b) { return clone(sorted().filter((e) => e.date >= a && e.date <= b)); },
     async getAll() { return clone(sorted()); },
     async getEntry(d) { return clone(entries.get(d)) || null; },
-    async setEntry(d, data) { entries.set(d, clone(data)); fire(); if (window.__offline) return new Promise(() => {}); },
+    async setEntry(d, data) { entries.set(d, clone(data)); fire(); if (typeof window !== 'undefined' && window.__offline) return new Promise(() => {}); },
     async deleteEntry(d) { entries.delete(d); fire(); },
     async count() { return entries.size; },
     async countRange(a, b) { return sorted().filter((e) => e.date >= a && e.date <= b).length; },
@@ -29,8 +29,11 @@ export function createStore(cfg) {
     async getSetting(n) { return clone(settings.get(n)) || null; },
     async setSetting(n, d) { settings.set(n, clone(d)); },
     async deleteSetting(n) { settings.delete(n); },
-    async addPhoto(id, data) { photos.set(id, data); },
-    async getPhoto(id) { return photos.get(id) || null; },
+    async addPhoto(id, data, date) { photos.set(id, { data, date: date || '', created: Date.now() }); },
+    async getPhoto(id) { const d = photos.get(id); return d ? d.data || null : null; },
+    async getPhotoDoc(id) { return clone(photos.get(id)) || null; },
+    async putPhotoDoc(id, d) { photos.set(id, clone(d)); },
+    async listPhotos() { return [...photos.keys()]; },
     async deletePhoto(id) { photos.delete(id); },
     async sync() {}
   };

@@ -1,0 +1,29 @@
+name: tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Unit tests
+        run: for f in tests/*.test.mjs; do case "$f" in *rules*) ;; *) node --test "$f" || exit 1;; esac; done
+  rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - name: Install
+        run: npm install --no-save firebase-tools @firebase/rules-unit-testing firebase
+      - name: Database rules tests
+        run: npx firebase emulators:exec --only firestore --project daybook-rules "node --test tests/rules.test.mjs"

@@ -51,7 +51,7 @@ export function createStore(cfg) {
   const rows = (s) => s.docs.map((d) => d.data());
 
   return {
-    onAuth(cb) { return onAuthStateChanged(auth, (u) => { uid = u ? u.uid : null; cb(u ? { email: u.email, provider: (u.providerData[0] && u.providerData[0].providerId) || 'password' } : null); }); },
+    onAuth(cb) { return onAuthStateChanged(auth, (u) => { uid = u ? u.uid : null; cb(u ? { email: u.email, uid: u.uid, provider: (u.providerData[0] && u.providerData[0].providerId) || 'password' } : null); }); },
     signIn: (email, pass) => signInWithEmailAndPassword(auth, email, pass),
     async signInGoogle() {
       // In the Android app a normal pop-up cannot open, so the phone's own Google account picker is used.
@@ -117,7 +117,10 @@ export function createStore(cfg) {
     deleteSetting: (name) => deleteDoc(ref('settings', name)),
 
     addPhoto: (id, dataUrl, date) => setDoc(ref('photos', id), { data: dataUrl, date, created: Date.now() }),
-    async getPhoto(id) { const d = await getDoc(ref('photos', id)); return d.exists() ? d.data().data : null; },
+    async getPhoto(id) { const d = await getDoc(ref('photos', id)); return d.exists() ? d.data().data || null : null; },
+    async getPhotoDoc(id) { const d = await getDoc(ref('photos', id)); return d.exists() ? d.data() : null; },
+    putPhotoDoc: (id, data) => setDoc(ref('photos', id), data),
+    async listPhotos() { return (await getDocs(col('photos'))).docs.map((d) => d.id); },
     deletePhoto: (id) => deleteDoc(ref('photos', id)),
     logTelemetry: (d) => addDoc(collection(db, 'telemetry'), d),
     sync: () => waitForPendingWrites(db)

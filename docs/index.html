@@ -191,6 +191,10 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; color:
 .set-pad { display: grid; gap: var(--s2); padding: var(--inset); }
 .set-pad .btn, .set-pad input { width: 100%; box-sizing: border-box; min-height: 48px; border-radius: var(--r-in); }
 .set-pad .s, .set-pad .fine { padding: 0 6px; }
+.rkey { display: block; padding: 14px 16px; border-radius: var(--r-in); background: color-mix(in srgb, var(--ink) 7%, var(--bg)); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 1.05rem; letter-spacing: .06em; text-align: center; user-select: all; word-break: break-all; }
+.check { display: flex; align-items: flex-start; gap: var(--s3); padding: 4px 6px; font-size: .95rem; }
+.set-pad .check input, .check input { width: 22px; min-width: 22px; min-height: 22px; height: 22px; margin: 0; padding: 0; flex: 0 0 22px; accent-color: var(--ink); }
+.check span { flex: 1; min-width: 0; }
 .set-note { margin: var(--s2) 6px 0; font-size: .82rem; color: var(--ink-2); }
 .set-note:empty { display: none; }
 .sw { flex: 0 0 auto; position: relative; width: 54px; height: 32px; border-radius: var(--r-in); border: 2px solid var(--ink-2); background: transparent; padding: 0; transition: background-color .15s ease, border-color .15s ease; }
@@ -399,6 +403,26 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     </form>
   </div>
 </div>
+<div class="lock" id="encLock" hidden>
+  <div class="lockcard">
+    <h1>Daybook</h1>
+    <form id="encForm">
+      <p>Your journal is encrypted. Enter your passphrase to open it on this phone.</p>
+      <input type="password" id="encPass" autocomplete="current-password" placeholder="Passphrase" aria-label="Passphrase">
+      <button class="btn primary" type="submit">Unlock</button>
+      <div class="lockerr" id="encErr" aria-live="polite"></div>
+      <button class="link" id="encForgot" type="button" style="justify-self:start">Use my recovery key</button>
+      <button class="link" id="encOut" type="button" style="justify-self:start">Sign out</button>
+    </form>
+    <form id="encRecForm" hidden>
+      <p>Type your recovery key, then choose a new passphrase.</p>
+      <input type="text" id="encRecKey" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Recovery key" aria-label="Recovery key">
+      <input type="password" id="encNewPass" autocomplete="new-password" placeholder="New passphrase, 8 or more characters" aria-label="New passphrase">
+      <div class="row"><button class="btn primary" type="submit">Unlock</button><button class="btn" id="encRecBack" type="button">Back</button></div>
+      <div class="lockerr" id="encRecErr" aria-live="polite"></div>
+    </form>
+  </div>
+</div>
 
 <dialog class="consent" id="gramConsent" aria-labelledby="gcTitle">
   <h2 id="gcTitle">Send text for correction?</h2>
@@ -457,6 +481,39 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     </div>
   </section>
 
+  <section class="panel lockpanel" id="encSetup" hidden aria-label="Encrypt your journal">
+    <div class="sheethead"><h2>Encrypt journal</h2><button class="ibtn" id="esClose" type="button" aria-label="Close" title="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div id="esForm">
+      <p class="set-note">Only you can read your journal afterwards. Nobody else can, including the developer.</p>
+      <div class="set-title">1 · Recovery key</div>
+      <div class="set-group"><div class="set-pad">
+        <code class="rkey" id="esKey" translate="no"></code>
+        <div class="row"><button class="btn" id="esCopy" type="button">Copy</button><button class="btn" id="esSaveKey" type="button">Save as file</button></div>
+        <label class="check"><input type="checkbox" id="esKeySaved"><span>I saved this key somewhere safe</span></label>
+      </div></div>
+      <p class="set-note">If you forget your passphrase, this key is the only way back in.</p>
+      <div class="set-title">2 · Passphrase</div>
+      <div class="set-group"><div class="set-pad">
+        <input type="password" id="esPass" autocomplete="new-password" placeholder="Passphrase, 8 or more characters" aria-label="Passphrase">
+        <input type="password" id="esPass2" autocomplete="new-password" placeholder="Repeat the passphrase" aria-label="Repeat the passphrase">
+      </div></div>
+      <div class="set-title">3 · Backup</div>
+      <div class="set-group"><div class="set-pad">
+        <button class="btn" id="esBackup" type="button">Back up everything first</button>
+        <label class="check"><input type="checkbox" id="esBackupSaved"><span>I saved the backup file</span></label>
+      </div></div>
+      <div class="set-title">4 · Encrypt</div>
+      <div class="set-group"><div class="set-pad"><button class="btn primary" id="esGo" type="button" disabled>Encrypt my journal</button></div></div>
+      <p class="set-note" id="esMsg" role="status" aria-live="polite"></p>
+    </div>
+    <div id="esBusy" hidden>
+      <div class="set-group"><div class="set-pad"><span class="t" id="esProg">Encrypting…</span><span class="s">Keep Daybook open until this finishes.</span></div></div>
+    </div>
+    <div id="esDone" hidden>
+      <div class="set-group"><div class="set-pad"><span class="t" id="esDoneMsg">Done. Your journal is encrypted.</span><button class="btn primary" id="esDoneBtn" type="button">Close</button></div></div>
+    </div>
+  </section>
+
   <section class="panel lockpanel" id="lockPanel" hidden aria-label="Settings">
     <div class="sheethead"><h2>Settings</h2><button class="ibtn" id="lpClose" type="button" aria-label="Close" title="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="set-title">Look</div>
@@ -495,6 +552,21 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
         </div>
       </div>
       <div class="set-row" id="privSection" hidden><div class="lab"><span class="t">Hide in recent apps</span><span class="s">Blank in the app switcher</span></div><button class="sw" id="recToggle" type="button" role="switch" aria-checked="true" aria-label="Hide in recent apps"></button></div>
+    </div>
+
+    <div class="set-title">Encryption</div>
+    <div class="set-group">
+      <button class="set-row act" id="encOpen" type="button"><span class="lab"><span class="t">Encrypt my journal</span><span class="s">Only you can read it</span></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+      <div id="encOnBox" class="set-sub" hidden>
+        <div class="set-row"><div class="lab"><span class="t">Encrypted</span><span class="s">Passphrase and recovery key</span></div></div>
+        <div class="set-row"><div class="lab"><span class="t">Remember on this phone</span><span class="s">Skip the passphrase here</span></div><button class="sw" id="encRemember" type="button" role="switch" aria-checked="true" aria-label="Remember on this phone"></button></div>
+        <button class="set-row act" id="encChange" type="button"><span class="t">Change passphrase</span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+        <div id="encChangeBox" class="set-pad" hidden>
+          <input type="password" id="ecOld" autocomplete="current-password" placeholder="Current passphrase" aria-label="Current passphrase">
+          <input type="password" id="ecNew" autocomplete="new-password" placeholder="New passphrase, 8 or more characters" aria-label="New passphrase">
+          <button class="btn primary" id="ecGo" type="button">Change passphrase</button>
+        </div>
+      </div>
     </div>
 
     <div id="remSection" hidden>
