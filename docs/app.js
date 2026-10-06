@@ -768,7 +768,7 @@ async function runBackup() {
     for (let i = 0; i < ids.length; i++) { setMsg('Collecting photos ' + (i + 1) + ' of ' + ids.length + '…'); const d = await photoData(ids[i]); if (d) pics[ids[i]] = d; }
     const name = 'daybook-backup-' + todayKey() + '.json';
     await saveFile(name, JSON.stringify({ app: 'daybook', version: 2, exported: new Date().toISOString(), entries: list, photos: pics }), 'application/json');
-    setMsg('Saved ' + name + ' with ' + list.length + ' entries and ' + ids.length + ' photos.'); return true;
+    setMsg('Saved ' + name + ' with ' + list.length + (list.length === 1 ? ' entry' : ' entries') + (ids.length ? ' and ' + ids.length + (ids.length === 1 ? ' photo' : ' photos') : '') + '.'); return true;
   } catch (e) { setMsg('Could not make the backup. Check your connection.'); return false; }
 }
 async function runRestore(file) {
