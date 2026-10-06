@@ -483,7 +483,7 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
   </section>
 
   <section class="panel lockpanel" id="encSetup" hidden aria-label="Encrypt your journal">
-    <div class="sheethead"><h2>Encrypt journal</h2><button class="ibtn" id="esClose" type="button" aria-label="Close" title="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
+    <div class="sheethead" style="justify-content:flex-start"><button class="ibtn" id="esClose" type="button" aria-label="Back to Settings" title="Back"><svg class="ic"><use href="#i-left"/></svg></button><h2>Encrypt journal</h2></div>
     <div id="esForm">
       <p class="set-note">Only you can read your journal afterwards. Nobody else can, including the developer.</p>
       <div class="set-title">1 · Recovery key</div>
@@ -505,6 +505,7 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
       </div></div>
       <div class="set-title">4 · Encrypt</div>
       <div class="set-group"><div class="set-pad"><button class="btn primary" id="esGo" type="button" disabled>Encrypt my journal</button></div></div>
+      <p class="set-note" id="esWhy" role="status" aria-live="polite"></p>
       <p class="set-note" id="esMsg" role="status" aria-live="polite"></p>
     </div>
     <div id="esBusy" hidden>

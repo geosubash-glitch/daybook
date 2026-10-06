@@ -307,8 +307,15 @@ function renderEnc() {
   $('#encChangeBox').hidden = true;
 }
 function esCheck() {
-  const ok = $('#esKeySaved').checked && esBackedUp && $('#esBackupSaved').checked && $('#esPass').value.length >= MIN_PASSPHRASE && $('#esPass').value === $('#esPass2').value;
-  $('#esGo').disabled = !ok;
+  const a = $('#esPass').value, b = $('#esPass2').value;
+  const need = [];
+  if (!$('#esKeySaved').checked) need.push('tick “I saved this key”');
+  if (a.length < MIN_PASSPHRASE) need.push('choose a passphrase of ' + MIN_PASSPHRASE + ' or more characters');
+  else if (a !== b) need.push('type the same passphrase in both boxes');
+  if (!esBackedUp) need.push('tap “Back up everything first”');
+  if (!$('#esBackupSaved').checked) need.push('tick “I saved the backup file”');
+  $('#esGo').disabled = need.length > 0;
+  $('#esWhy').textContent = need.length ? 'To continue: ' + need.join(', ') + '.' : '';
 }
 function openEncSetup(resume) {
   closePanel();
@@ -331,12 +338,12 @@ async function runMigrate() {
   }
 }
 $('#encOpen').addEventListener('click', () => { if (!navigator.onLine) { $('#lpMsg').textContent = 'Connect to the internet first.'; return; } openEncSetup(false); });
-$('#esClose').addEventListener('click', () => { $('#encSetup').hidden = true; });
+$('#esClose').addEventListener('click', () => { $('#encSetup').hidden = true; $('#lockPanel').hidden = false; $('#lockBtn').setAttribute('aria-expanded', 'true'); renderEnc(); renderLockPanel(); });
 $('#esDoneBtn').addEventListener('click', () => { $('#encSetup').hidden = true; });
-['#esKeySaved', '#esBackupSaved', '#esPass', '#esPass2'].forEach((s) => $(s).addEventListener('input', esCheck));
+['#esKeySaved', '#esBackupSaved', '#esPass', '#esPass2'].forEach((s) => ['input', 'change', 'keyup'].forEach((ev) => $(s).addEventListener(ev, esCheck)));
 $('#esCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(esKey); $('#esMsg').textContent = 'Copied.'; } catch (e) { $('#esMsg').textContent = 'Could not copy. Select the key and copy it.'; } });
 $('#esSaveKey').addEventListener('click', async () => { try { await saveFile('daybook-recovery-key.txt', 'Daybook recovery key\n' + esKey + '\n\nKeep this private. With it, anyone can open your journal.\n', 'text/plain'); } catch (e) { $('#esMsg').textContent = 'Could not save the file.'; } });
-$('#esBackup').addEventListener('click', async () => { await runBackup(); esBackedUp = true; $('#esMsg').textContent = $('#lpMsg').textContent; esCheck(); });
+$('#esBackup').addEventListener('click', async () => { esBackedUp = await runBackup() !== false; $('#esMsg').textContent = $('#lpMsg').textContent; esCheck(); });
 $('#esGo').addEventListener('click', async () => {
   $('#esGo').disabled = true; encBusy('busy'); $('#esProg').textContent = 'Setting up…';
   try { await store.enc.setup($('#esPass').value, esKey); } catch (e) { $('#esMsg').textContent = 'Could not set up encryption. Check your connection.'; encBusy('form'); esCheck(); return; }
@@ -426,6 +433,7 @@ $('#remTime').addEventListener('change', () => { const t = $('#remTime').value |
 // Android back button: close whatever is open first, then go back to today, then leave the app.
 onBack(() => {
   if (!$('#lightbox').hidden) { closeLightbox(); return true; }
+  if (!$('#encSetup').hidden && $('#esBusy').hidden) { $('#esClose').click(); return true; }
   if (!$('#lockPanel').hidden) { closePanel(); return true; }
   if (!$('#exportPanel').hidden) { closeExport(); return true; }
   if (!$('#browse').hidden) { closeBrowse(); return true; }
@@ -751,7 +759,7 @@ async function runExport(kind) {
   } catch (e) { setMsg(/pdf library|fetch/i.test(String(e && e.message)) ? 'Could not load the PDF maker. Check your connection and try again.' : 'Could not make that file. ' + String(e && (e.message || e) || '').slice(0, 80)); }
 }
 async function runBackup() {
-  if (!navigator.onLine) { setMsg('Connect to the internet to make a full backup.'); return; }
+  if (!navigator.onLine) { setMsg('Connect to the internet to make a full backup.'); return false; }
   setMsg('Preparing your backup…');
   try {
     await flush();
@@ -760,8 +768,8 @@ async function runBackup() {
     for (let i = 0; i < ids.length; i++) { setMsg('Collecting photos ' + (i + 1) + ' of ' + ids.length + '…'); const d = await photoData(ids[i]); if (d) pics[ids[i]] = d; }
     const name = 'daybook-backup-' + todayKey() + '.json';
     await saveFile(name, JSON.stringify({ app: 'daybook', version: 2, exported: new Date().toISOString(), entries: list, photos: pics }), 'application/json');
-    setMsg('Saved ' + name + ' with ' + list.length + ' entries and ' + ids.length + ' photos.');
-  } catch (e) { setMsg('Could not make the backup. Check your connection.'); }
+    setMsg('Saved ' + name + ' with ' + list.length + ' entries and ' + ids.length + ' photos.'); return true;
+  } catch (e) { setMsg('Could not make the backup. Check your connection.'); return false; }
 }
 async function runRestore(file) {
   if (!navigator.onLine) { setMsg('Connect to the internet to restore a backup.'); return; }
