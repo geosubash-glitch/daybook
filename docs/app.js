@@ -902,3 +902,27 @@ boot();
   $('#upiPay').href = 'upi://pay?pa=' + encodeURIComponent(links.upiId) + '&pn=' + encodeURIComponent(links.upiName || 'Daybook') + '&cu=INR&tn=' + encodeURIComponent('Support Daybook');
   $('#upiNote').textContent = 'UPI ID: ' + links.upiId;
 })();
+
+// Easy reading mode: bigger text, darker greys, labelled buttons. Asked once on first open, one tap to change later.
+(function easyReading() {
+  const get = () => { try { return localStorage.getItem('daybook.view'); } catch (e) { return ''; } };
+  const apply = (on) => {
+    const r = document.documentElement;
+    if (on) r.setAttribute('data-view', 'readable'); else r.removeAttribute('data-view');
+    const b = $('#viewBtn'), b2 = $('#viewBtn2');
+    if (b) b.setAttribute('aria-pressed', String(on));
+    if (b2) { b2.setAttribute('aria-pressed', String(on)); b2.textContent = on ? 'Easy reading: on' : 'Easy reading: off'; }
+    requestAnimationFrame(() => { try { autosize(); } catch (e) {} });
+  };
+  const choose = (on) => { try { localStorage.setItem('daybook.view', on ? 'readable' : 'classic'); } catch (e) {} apply(on); };
+  apply(get() === 'readable');
+  ['#viewBtn', '#viewBtn2'].forEach((s) => { const el = $(s); if (el) el.addEventListener('click', () => choose(document.documentElement.getAttribute('data-view') !== 'readable')); });
+  const box = $('#viewChoice');
+  if (box && get() === null) {
+    box.hidden = false;
+    const done = (on) => { choose(on); box.hidden = true; };
+    $('#vcClassic').addEventListener('click', () => done(false));
+    $('#vcEasy').addEventListener('click', () => done(true));
+    setTimeout(() => { try { $('#vcClassic').focus(); } catch (e) {} }, 50);
+  }
+})();

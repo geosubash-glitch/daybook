@@ -31,6 +31,7 @@
 <link rel="modulepreload" href="app.js">
 <link rel="modulepreload" href="store-firebase.js">
 <link rel="modulepreload" href="vendor/firebase.js">
+<script>try{if(localStorage.getItem("daybook.view")==="readable")document.documentElement.setAttribute("data-view","readable")}catch(e){}</script>
 <style>
 /* Layout: one centred manuscript column on an 8pt grid.
    Corners are concentric: a control is 12px, and anything that holds controls
@@ -69,6 +70,44 @@ button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .col { max-width: 42rem; margin-inline: auto; }
 .ic { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+.viewchoice { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: grid; place-items: center; padding: 24px; overflow-y: auto; }
+.vccard { width: 100%; max-width: 32rem; display: grid; gap: 16px; }
+.vccard h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 2rem; line-height: 1.2; text-wrap: balance; }
+.vccard p { margin: 0; font-size: 1.1rem; color: var(--ink-2); }
+.vcrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.vcprev { display: grid; gap: 4px; align-content: start; background: #fbfbfa; color: #0f0f10; border: 1px solid #d8d8d4; border-radius: 10px; padding: 10px; height: 11rem; overflow: hidden; }
+.vcprev i { font-style: normal; font-family: var(--f-display); font-weight: 600; letter-spacing: .02em; }
+.vcprev em { font-style: normal; font-family: var(--f-write); }
+.vcprev u { text-decoration: none; justify-self: start; border: 1px solid currentColor; border-radius: 99px; padding: 1px 8px; margin-top: 2px; }
+.vcp-c i { font-size: .95rem; } .vcp-c em { font-size: .72rem; line-height: 1.4; color: #6b6b68; } .vcp-c u { font-size: .6rem; color: #6b6b68; border-color: #d8d8d4; }
+.vcp-e i { font-size: 1.15rem; } .vcp-e em { font-size: .9rem; line-height: 1.45; color: #0f0f10; } .vcp-e u { font-size: .8rem; font-weight: 600; border-width: 2px; padding: 3px 10px; }
+.vcbtn { display: grid; gap: 4px; align-content: start; text-align: left; border: 2px solid var(--ink); background: transparent; color: inherit; border-radius: 16px; padding: 10px; }
+.vcbtn b { font-family: var(--f-ui); font-size: 1.25rem; font-weight: 600; }
+.vcbtn span { font-size: 1.05rem; color: var(--ink-2); }
+.vcbtn:hover { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+/* Easy reading: same look, larger and clearer. One tap on Aa. Saved on this device. */
+.lbl { display: none; }
+.aa { font-family: var(--f-display); font-weight: 600; font-size: 1.15rem; letter-spacing: 0; line-height: 1; }
+:root[data-view="readable"] { --ink-2: #484845; --rule: #B9B9B4; }
+@media (prefers-color-scheme: dark) { :root[data-view="readable"]:not([data-theme="light"]) { --ink-2: #CFCFCA; --rule: #55555A; } }
+:root[data-theme="dark"][data-view="readable"] { --ink-2: #CFCFCA; --rule: #55555A; }
+:root[data-view="readable"] { font-size: 118%; }
+:root[data-view="readable"] body { font-size: 1.05rem; line-height: 1.6; }
+:root[data-view="readable"] :focus-visible { outline-width: 3px; }
+:root[data-view="readable"] .top { flex-wrap: wrap; row-gap: var(--s3); }
+:root[data-view="readable"] .ibtn { width: auto; min-width: 56px; height: auto; min-height: 56px; padding: 6px 8px; gap: 2px; grid-auto-flow: row; align-content: center; justify-items: center; }
+:root[data-view="readable"] .lbl { display: block; font-size: .72rem; line-height: 1.1; letter-spacing: 0; text-transform: none; font-weight: 500; }
+:root[data-view="readable"] .ic { width: 24px; height: 24px; stroke-width: 1.8; }
+:root[data-view="readable"] .wk { font-size: .95rem; letter-spacing: .03em; text-transform: none; }
+:root[data-view="readable"] .date { font-weight: 700; }
+:root[data-view="readable"] .meta, :root[data-view="readable"] .count, :root[data-view="readable"] .hint, :root[data-view="readable"] .fine, :root[data-view="readable"] .foot .info { font-size: .95rem; }
+:root[data-view="readable"] .link, :root[data-view="readable"] .btn { font-size: 1rem; letter-spacing: 0; text-transform: none; }
+:root[data-view="readable"] .link { text-decoration: underline; text-underline-offset: 3px; }
+:root[data-view="readable"] .btn { min-height: 52px; height: auto; padding-block: 10px; }
+:root[data-view="readable"] h2, :root[data-view="readable"] h3 { font-weight: 700; }
+:root[data-view="readable"] #body { line-height: 1.85; }
+:root[data-view="readable"] input, :root[data-view="readable"] select { font-size: 1.05rem; }
 
 /* icon buttons: 44px target, 12px corner. A group adds 4px padding, so its corner is 16px. */
 .ibtn { width: 44px; height: 44px; border: 0; background: transparent; border-radius: var(--r); display: grid; place-items: center; padding: 0; color: var(--ink); }
@@ -283,6 +322,7 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
       <div class="lockerr" id="siErr" aria-live="polite"></div>
       <p class="fine legal">By continuing you agree to the <a href="terms.html">Terms</a> and the <a href="privacy.html">Privacy Policy</a>.</p>
       <p class="fine legal" id="getApp"><a href="download.html">Get the Android app</a> · <a href="support.html">Support Daybook</a></p>
+      <p class="fine legal"><button type="button" class="link" id="viewBtn2" aria-pressed="false">Easy reading: off</button></p>
       <details class="siemail">
         <summary>Use email and password</summary>
         <form id="signinForm">
@@ -333,9 +373,10 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
   <header class="top">
     <div class="brand">Daybook</div>
     <div class="group" role="toolbar" aria-label="Journal tools">
-      <button class="ibtn" id="browseBtn" type="button" aria-label="Calendar and search" title="Calendar and search" aria-expanded="false"><svg class="ic"><use href="#i-cal"/></svg></button>
-      <button class="ibtn" id="exportBtn" type="button" aria-label="Print or save your journal" title="Print or save" aria-expanded="false"><svg class="ic"><use href="#i-export"/></svg></button>
-      <button class="ibtn" id="lockBtn" type="button" aria-label="Settings" title="Settings" aria-expanded="false"><svg class="ic"><use href="#i-sliders"/></svg></button>
+      <button class="ibtn" id="viewBtn" type="button" aria-label="Easy reading: larger text and labelled buttons" title="Easy reading" aria-pressed="false"><span class="aa" aria-hidden="true">Aa</span><span class="lbl" aria-hidden="true">Easy read</span></button>
+      <button class="ibtn" id="browseBtn" type="button" aria-label="Calendar and search" title="Calendar and search" aria-expanded="false"><svg class="ic"><use href="#i-cal"/></svg><span class="lbl" aria-hidden="true">Calendar</span></button>
+      <button class="ibtn" id="exportBtn" type="button" aria-label="Print or save your journal" title="Print or save" aria-expanded="false"><svg class="ic"><use href="#i-export"/></svg><span class="lbl" aria-hidden="true">Print</span></button>
+      <button class="ibtn" id="lockBtn" type="button" aria-label="Settings" title="Settings" aria-expanded="false"><svg class="ic"><use href="#i-sliders"/></svg><span class="lbl" aria-hidden="true">Settings</span></button>
     </div>
   </header>
   <div class="banner" id="banner" hidden></div>
@@ -481,8 +522,8 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
         <div class="meta"><span id="dMeta"></span><button class="link" id="today" type="button" hidden>Back to today</button></div>
       </div>
       <div class="group" role="group" aria-label="Change day">
-        <button class="ibtn" id="prev" type="button" aria-label="Previous day" title="Previous day"><svg class="ic"><use href="#i-left"/></svg></button>
-        <button class="ibtn" id="next" type="button" aria-label="Next day" title="Next day"><svg class="ic"><use href="#i-right"/></svg></button>
+        <button class="ibtn" id="prev" type="button" aria-label="Previous day" title="Previous day"><svg class="ic"><use href="#i-left"/></svg><span class="lbl" aria-hidden="true">Back</span></button>
+        <button class="ibtn" id="next" type="button" aria-label="Next day" title="Next day"><svg class="ic"><use href="#i-right"/></svg><span class="lbl" aria-hidden="true">Next</span></button>
       </div>
     </div>
 
@@ -495,16 +536,32 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
 
     <div class="foot">
       <div class="group" role="toolbar" aria-label="Entry tools">
-        <button class="ibtn" id="stamp" type="button" aria-label="Add the time" title="Add the time"><svg class="ic"><use href="#i-clock"/></svg></button>
-        <button class="ibtn" id="fix" type="button" aria-label="Correct spelling and grammar now" title="Correct spelling and grammar"><svg class="ic"><use href="#i-wand"/></svg></button>
-        <button class="ibtn" id="auto" type="button" aria-label="Auto-correct while I write" title="Auto-correct as I write" aria-pressed="false"><svg class="ic"><use href="#i-spell"/></svg></button>
-        <button class="ibtn" id="undo" type="button" aria-label="Undo the last correction" title="Undo correction" hidden><svg class="ic"><use href="#i-undo"/></svg></button>
+        <button class="ibtn" id="stamp" type="button" aria-label="Add the time" title="Add the time"><svg class="ic"><use href="#i-clock"/></svg><span class="lbl" aria-hidden="true">Time</span></button>
+        <button class="ibtn" id="fix" type="button" aria-label="Correct spelling and grammar now" title="Correct spelling and grammar"><svg class="ic"><use href="#i-wand"/></svg><span class="lbl" aria-hidden="true">Fix now</span></button>
+        <button class="ibtn" id="auto" type="button" aria-label="Auto-correct while I write" title="Auto-correct as I write" aria-pressed="false"><svg class="ic"><use href="#i-spell"/></svg><span class="lbl" aria-hidden="true">Auto-fix</span></button>
+        <button class="ibtn" id="undo" type="button" aria-label="Undo the last correction" title="Undo correction" hidden><svg class="ic"><use href="#i-undo"/></svg><span class="lbl" aria-hidden="true">Undo</span></button>
       </div>
       <div class="info"><span id="wc">0 words</span><span id="status" role="status"></span><button type="button" id="sync" class="sync" data-state="ok" disabled aria-live="polite">Synced</button></div>
     </div>
   </main>
 </div>
 
+<div id="viewChoice" class="viewchoice" role="dialog" aria-modal="true" aria-labelledby="vcTitle" hidden>
+  <div class="vccard">
+    <h1 id="vcTitle">How would you like Daybook to look?</h1>
+    <p>You can change this any time with the <b>Aa</b> button.</p>
+    <div class="vcrow">
+      <button type="button" class="vcbtn" id="vcClassic">
+        <span class="vcprev vcp-c" aria-hidden="true"><i>Tuesday</i><em>A quiet morning. Tea on the balcony and a few pages read.</em><u>&#9998; Save</u></span>
+        <b>Classic</b><span>The Daybook look.</span>
+      </button>
+      <button type="button" class="vcbtn" id="vcEasy">
+        <span class="vcprev vcp-e" aria-hidden="true"><i>Tuesday</i><em>A quiet morning. Tea on the balcony and a few pages read.</em><u>&#9998; Save</u></span>
+        <b>Easy reading</b><span>Larger text, buttons with words.</span>
+      </button>
+    </div>
+  </div>
+</div>
 <script type="module" src="app.js"></script>
 </body>
 </html>

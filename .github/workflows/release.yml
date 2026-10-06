@@ -80,6 +80,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TAG="v${{ github.run_number }}"
+          TAG="v1.$(( ${{ github.run_number }} - 7 ))"
           cp android/app/build/outputs/apk/release/app-release.apk Daybook.apk
           gh release create "$TAG" Daybook.apk --title "Daybook $TAG" --notes "Signed Android build. Install over an earlier signed build to update." --latest
