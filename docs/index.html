@@ -116,9 +116,9 @@ button { cursor: pointer; }
 .ibtn[aria-expanded="true"], .ibtn[aria-pressed="true"] { background: var(--ink); color: var(--ink-on); }
 .ibtn.danger:hover:not(:disabled) { color: var(--danger); }
 .ibtn.armed { background: var(--danger); color: #fff; }
-.group { display: inline-flex; gap: var(--s1); padding: var(--s1); border: 1px solid var(--rule); border-radius: calc(var(--r) + var(--s1)); flex-shrink: 0; }
+.group { display: inline-flex; flex-wrap: wrap; max-width: 100%; gap: var(--s1); padding: var(--s1); border: 1px solid var(--rule); border-radius: calc(var(--r) + var(--s1)); flex-shrink: 0; }
 
-.top { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
+.top { display: flex; flex-wrap: wrap; row-gap: var(--s3); align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s4); border-bottom: 1px solid var(--rule); }
 .brand { font-family: var(--f-display); font-weight: 600; font-size: 1.35rem; letter-spacing: .14em; text-transform: uppercase; }
 .banner { border: 1px solid var(--rule); border-radius: var(--r); padding: var(--s3) var(--s4); margin-top: var(--s4); font-size: .9rem; }
 
