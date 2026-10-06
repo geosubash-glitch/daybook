@@ -39,8 +39,10 @@ a { color:inherit; text-underline-offset:3px; }
 .lead { font-size:1.15rem; }
 .dl { display:inline-block; font:600 .95rem "Instrument Sans", system-ui, sans-serif; background:var(--ink); color:var(--bg); padding:14px 22px; border-radius:10px; text-decoration:none; margin:8px 0 6px; }
 .qr { display:block; width:200px; height:200px; border:1px solid var(--rule); border-radius:12px; background:#fff; margin:12px 0; }
-.ic-btn { width:44px; padding:0; justify-content:center; }
-.ic-btn svg { width:22px; height:22px; flex:none; display:block; }
+.byline { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid var(--rule); padding-top:16px; margin-top:20px; font:500 .8rem "Instrument Sans", system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase; }
+.socials { display:flex; gap:8px; }
+.socials a { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border:1px solid var(--ink); border-radius:10px; color:inherit; }
+.socials svg { width:20px; height:20px; flex:none; display:block; }
 .row { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 4px; }
 .btn { display:inline-flex; align-items:center; border:1px solid var(--ink); border-radius:10px; padding:0 18px; height:44px; font:500 .8rem "Instrument Sans", system-ui, sans-serif; letter-spacing:.06em; text-transform:uppercase; text-decoration:none; color:inherit; background:transparent; cursor:pointer; }
 video.promo { display:block; width:100%; height:auto; border:1px solid var(--rule); border-radius:12px; margin:8px 0 28px; background:#FBFBFA; }
@@ -54,11 +56,11 @@ code { font:500 .85rem ui-monospace, Menlo, Consolas, monospace; word-break:brea
 <p class="lead">Daybook is free, with no ads and no tracking of what you write. It is made and looked after by one person. If it has been useful to you, you can support it here. Using it and telling a friend helps just as much.</p>
 <div class="row"><a class="btn" id="pay" href="upi://pay?pa=geosubash@okaxis&amp;pn=geo%20subash&amp;cu=INR&amp;tn=Support%20Daybook">Support with UPI</a></div>
 <p class="fine">UPI ID: geosubash@okaxis</p>
-<div class="row" style="margin-top:32px">
-<a class="btn ic-btn" href="https://www.instagram.com/geo.subash" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Instagram"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".7" fill="currentColor" stroke="none"/></svg></a>
-<a class="btn ic-btn" href="https://www.linkedin.com/in/geo-subash-816a911ba" target="_blank" rel="noopener noreferrer" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.2" cy="8.4" r=".8" fill="currentColor" stroke="none"/><path d="M8.2 11v5.5M12 16.5V11M12 13.3c0-1.5 1-2.3 2.3-2.3 1.4 0 2.2.9 2.2 2.4v3.1"/></svg></a>
-<a class="btn ic-btn" href="https://www.behance.net/geosubash" target="_blank" rel="noopener noreferrer" title="Behance" aria-label="Behance"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 7h4.6a2.4 2.4 0 0 1 0 4.8H2.8m0 0h5.2a2.6 2.6 0 0 1 0 5.2H2.8V7"/><path d="M13.6 9.2h5.8M13.3 15h6.4a3.2 3.2 0 1 0 -.9 2.26"/></svg></a>
-<a class="btn ic-btn" href="mailto:geosubash@gmail.com" title="Email" aria-label="Email"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="M4.5 8l7.5 5.5L19.5 8"/></svg></a>
-</div>
-<p class="fine" style="margin-top:32px"><a href="download.html">Android app</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
+<p class="fine" style="margin-top:40px"><a href="download.html">Android app</a> · <a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a></p>
+<div class="byline"><span>Geo Subash</span><div class="socials">
+<a href="https://www.instagram.com/geo.subash" target="_blank" rel="noopener noreferrer" title="Instagram" aria-label="Instagram"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r=".7" fill="currentColor" stroke="none"/></svg></a>
+<a href="https://www.linkedin.com/in/geo-subash-816a911ba" target="_blank" rel="noopener noreferrer" title="LinkedIn" aria-label="LinkedIn"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><circle cx="8.2" cy="8.4" r=".8" fill="currentColor" stroke="none"/><path d="M8.2 11v5.5M12 16.5V11M12 13.3c0-1.5 1-2.3 2.3-2.3 1.4 0 2.2.9 2.2 2.4v3.1"/></svg></a>
+<a href="https://www.behance.net/geosubash" target="_blank" rel="noopener noreferrer" title="Behance" aria-label="Behance"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.8 7h4.6a2.4 2.4 0 0 1 0 4.8H2.8m0 0h5.2a2.6 2.6 0 0 1 0 5.2H2.8V7"/><path d="M13.6 9.2h5.8M13.3 15h6.4a3.2 3.2 0 1 0 -.9 2.26"/></svg></a>
+<a href="mailto:geosubash@gmail.com" title="Email" aria-label="Email"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="3"/><path d="M4.5 8l7.5 5.5L19.5 8"/></svg></a>
+</div></div>
 </main></body></html>

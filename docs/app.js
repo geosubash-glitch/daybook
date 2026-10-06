@@ -892,7 +892,7 @@ boot();
   const row = $('#socialRow'); if (!row) return;
   [['instagram', 'Instagram', links.instagram], ['linkedin', 'LinkedIn', links.linkedin], ['behance', 'Behance', links.behance], ['mail', 'Email', links.email && 'mailto:' + links.email]].forEach(([id, name, href]) => {
     if (!href) return;
-    const el = document.createElement('a'); el.className = 'btn icon'; el.href = href; el.title = name; el.setAttribute('aria-label', name);
+    const el = document.createElement('a'); el.href = href; el.title = name; el.setAttribute('aria-label', name);
     el.innerHTML = '<svg class="ic" aria-hidden="true"><use href="#i-' + id + '"/></svg>';
     if (/^https?:/.test(href)) { el.target = '_blank'; el.rel = 'noopener noreferrer'; }
     row.appendChild(el);

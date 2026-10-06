@@ -91,7 +91,9 @@ button { cursor: pointer; }
 .btn.primary { background: var(--ink); color: var(--ink-on); }
 .btn.primary:hover:not(:disabled) { opacity: .85; }
 select, input[type="date"], input[type="search"], input[type="password"], input[type="email"], input[type="text"] { border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: 0 var(--s3); height: 44px; max-width: 100%; }
-a.btn.icon { width: 44px; padding: 0; justify-content: center; }
+.byline { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); border-top: 1px solid var(--rule); padding-top: var(--s4); font-family: var(--f-ui); font-size: .82rem; letter-spacing: .06em; text-transform: uppercase; }
+.socials { display: flex; gap: var(--s2); }
+.socials a { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: 1px solid var(--ink); border-radius: var(--r); color: inherit; }
 a.btn { display: inline-flex; align-items: center; text-decoration: none; color: inherit; }
 .row { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
 
@@ -434,16 +436,54 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
         <div class="row"><button class="btn danger solid" id="delGo" type="button">Erase everything</button><button class="btn" id="delCancel" type="button">Cancel</button></div>
       </div>
     </div>
-    <div class="section" id="aboutSec">
-      <h2>Made by Geo</h2>
-      <p class="fine">Daybook is made and looked after by one person. Say hello, or follow along.</p>
-      <div class="row" id="socialRow"></div>
-    </div>
     <div class="section" id="supportSec" hidden>
       <h2>Support Daybook</h2>
       <p class="fine">Free, with no ads. If Daybook has been useful, you can support it here. Telling a friend helps just as much.</p>
       <div class="row"><a class="btn" id="upiPay" href="#">Support with UPI</a></div>
       <p class="fine" id="upiNote"></p>
+    </div>
+    <p class="fine legal"><a href="privacy.html">Privacy</a> · <a href="terms.html">Terms</a><span id="getApp2"> · <a href="download.html">Android app</a></span></p>
+    <div class="byline" id="aboutSec"><span>Geo Subash</span><div class="socials" id="socialRow"></div></div>
+    <p class="msg" id="lpMsg" aria-live="polite"></p>
+  </section>
+
+  <section class="browse" id="browse" hidden aria-label="Browse your journal">
+    <div>
+      <h2>Calendar</h2>
+      <div class="calhead">
+        <div class="selgrp">
+          <select id="mSel" aria-label="Month"></select>
+          <select id="ySel" aria-label="Year"></select>
+        </div>
+        <div class="group">
+          <button class="ibtn" id="mPrev" type="button" aria-label="Previous month"><svg class="ic"><use href="#i-left"/></svg></button>
+          <button class="ibtn" id="mNext" type="button" aria-label="Next month"><svg class="ic"><use href="#i-right"/></svg></button>
+        </div>
+      </div>
+      <div class="cal" id="cal"></div>
+      <p class="count" id="count"></p>
+    </div>
+    <div>
+      <h2>Search</h2>
+      <input type="search" id="q" placeholder="A word or a title" aria-label="Search entries">
+      <p class="hint" id="qInfo" style="margin:8px 0 0"></p>
+      <ul class="list" id="results"></ul>
+      <h2 style="margin-top:32px">On this day</h2>
+      <ul class="list" id="otd"></ul>
+    </div>
+  </section>
+
+  <main>
+    <div class="dateblock">
+      <div>
+        <div class="wk" id="dWeek"></div>
+        <div class="date" id="dDate"></div>
+        <div class="meta"><span id="dMeta"></span><button class="link" id="today" type="button" hidden>Back to today</button></div>
+      </div>
+      <div class="group" role="group" aria-label="Change day">
+        <button class="ibtn" id="prev" type="button" aria-label="Previous day" title="Previous day"><svg class="ic"><use href="#i-left"/></svg></button>
+        <button class="ibtn" id="next" type="button" aria-label="Next day" title="Next day"><svg class="ic"><use href="#i-right"/></svg></button>
+      </div>
     </div>
 
 
