@@ -899,5 +899,5 @@ boot();
   if (!links.upiId) return;
   $('#supportSec').hidden = false;
   $('#upiPay').href = 'upi://pay?pa=' + encodeURIComponent(links.upiId) + '&pn=' + encodeURIComponent(links.upiName || 'Daybook') + '&cu=INR&tn=' + encodeURIComponent('Support Daybook');
-  $('#upiNote').textContent = links.upiId;
+  $('#upiNote').textContent = 'UPI ID: ' + links.upiId;
 })();
