@@ -87,8 +87,8 @@ async function onAuth(user) {
   $('#acct').textContent = user.email;
   acctProvider = user.provider || 'password';
   try {
-    lockData = await store.getSetting('lock');
-    prefs = (await store.getSetting('prefs')) || {};
+    const [lk, pf] = await Promise.all([store.getSetting('lock'), store.getSetting('prefs')]);
+    lockData = lk; prefs = pf || {};
   } catch (e) {
     teardown(); gate('#signin');
     $('#siErr').textContent = 'Signed in, but the journal could not be reached. Check your connection and that the Firestore rules were published.';
