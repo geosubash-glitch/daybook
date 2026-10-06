@@ -73,7 +73,7 @@ button { cursor: pointer; }
 
 .viewchoice { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: grid; place-items: center; padding: 24px; overflow-y: auto; }
 .vccard { width: 100%; max-width: 32rem; display: grid; gap: 16px; }
-.vccard h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: 2rem; line-height: 1.2; text-wrap: balance; }
+.vccard h1 { margin: 0; font-family: var(--f-ui); font-weight: 700; font-size: 2rem; line-height: 1.2; text-wrap: balance; }
 .vccard p { margin: 0; font-size: 1.1rem; color: var(--ink-2); }
 .vcrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .vcprev { display: grid; gap: 4px; align-content: start; background: #fbfbfa; color: #0f0f10; border: 1px solid #d8d8d4; border-radius: 10px; padding: 10px; height: 11rem; overflow: hidden; }
@@ -166,7 +166,7 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; color:
 
 /* panels: 16px padding around 12px controls gives a 28px corner */
 .panel { border: 1px solid var(--rule); padding: var(--s4); border-radius: calc(var(--r) + var(--s4)); display: grid; gap: var(--s3); }
-.panel h2, .panel h3 { margin: 0; font-family: var(--f-display); font-size: 1.3rem; font-weight: 600; }
+.panel h2, .panel h3 { margin: 0; font-family: var(--f-ui); font-size: 1.3rem; font-weight: 600; }
 .lockpanel { position: fixed; inset: 0; z-index: 45; margin: 0; max-width: none; border: 0; border-radius: 0; background: var(--bg); overflow-y: auto; overscroll-behavior: contain; align-content: start; justify-items: center;
   padding: 0 max(var(--s5), env(safe-area-inset-right)) max(var(--s7), env(safe-area-inset-bottom)) max(var(--s5), env(safe-area-inset-left)); }
 .lockpanel { grid-template-columns: minmax(0, 1fr); }
@@ -174,36 +174,38 @@ a.btn { display: inline-flex; align-items: center; text-decoration: none; color:
 .lockpanel select { max-width: 100%; }
 .sheethead { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding-bottom: var(--s3); border-bottom: 1px solid var(--rule); position: sticky; top: 0; background: var(--bg); z-index: 1; padding-top: max(var(--s5), env(safe-area-inset-top)); }
 .sheethead + .section { border-top: 0; padding-top: var(--s5); }
-.set-title { margin: var(--s5) 4px var(--s2); font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
+/* Settings rows. Concentric corners: outer radius = inner radius + inset (26 = 16 + 10). */
+:root { --inset: 10px; --r-in: 16px; --r-out: 26px; }
+.set-title { margin: var(--s5) 6px var(--s2); font-size: .8rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
 .sheethead + .set-title { margin-top: var(--s5); }
 .set-group { display: grid; gap: 4px; }
-.set-group > *, .set-sub > * { background: color-mix(in srgb, var(--ink) 5%, var(--bg)); border-radius: 18px; }
+.set-group > *, .set-sub > * { background: color-mix(in srgb, var(--ink) 5%, var(--bg)); border-radius: var(--r-out); }
 .set-sub { display: grid; gap: 4px; background: none !important; border-radius: 0 !important; }
-.set-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s4); padding: 12px 16px; min-height: 60px; width: 100%; border: 0; text-align: left; color: var(--ink); font: inherit; }
+.set-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--inset) var(--inset) var(--inset) 16px; min-height: 60px; width: 100%; border: 0; text-align: left; color: var(--ink); font: inherit; box-sizing: border-box; }
 .set-row .lab { display: grid; gap: 2px; min-width: 0; flex: 1 1 auto; }
 .set-row .t { font-size: 1.02rem; font-weight: 500; }
 .set-row .s, .set-pad .s { font-size: .82rem; color: var(--ink-2); line-height: 1.35; }
 .set-row.act { cursor: pointer; } .set-row.act:hover { background: color-mix(in srgb, var(--ink) 9%, var(--bg)); }
-.set-row .chev { font-size: 1.6rem; color: var(--ink-2); line-height: 1; }
-.set-row .btn, .set-row select, .set-row input[type=time] { flex: 0 0 auto; min-height: 40px; height: 40px; padding-block: 0; }
+.set-row .chev { font-size: 1.6rem; color: var(--ink-2); line-height: 1; padding-right: 6px; }
+.set-row .btn, .set-row select, .set-row input[type=time] { flex: 0 0 auto; min-height: 40px; height: 40px; padding-block: 0; border-radius: var(--r-in); white-space: nowrap; }
 .set-row .btn { padding-inline: 16px; }
-.set-pad { display: grid; gap: var(--s3); padding: 12px 16px 16px; }
-.set-pad .btn, .set-pad input { width: 100%; box-sizing: border-box; }
-.set-note { margin: var(--s2) 4px 0; font-size: .82rem; color: var(--ink-2); }
+.set-pad { display: grid; gap: var(--s2); padding: var(--inset); }
+.set-pad .btn, .set-pad input { width: 100%; box-sizing: border-box; min-height: 48px; border-radius: var(--r-in); }
+.set-pad .s, .set-pad .fine { padding: 0 6px; }
+.set-note { margin: var(--s2) 6px 0; font-size: .82rem; color: var(--ink-2); }
 .set-note:empty { display: none; }
-.sw { flex: 0 0 auto; position: relative; width: 52px; height: 30px; border-radius: 99px; border: 2px solid var(--ink-2); background: transparent; padding: 0; transition: background-color .15s ease, border-color .15s ease; }
-.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink-2); transition: transform .18s ease, background-color .15s ease, width .15s ease; }
+.sw { flex: 0 0 auto; position: relative; width: 54px; height: 32px; border-radius: var(--r-in); border: 2px solid var(--ink-2); background: transparent; padding: 0; transition: background-color .15s ease, border-color .15s ease; }
+.sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 11px; background: var(--ink-2); transition: transform .18s ease, background-color .15s ease; }
 .sw[aria-checked="true"] { background: var(--ink); border-color: var(--ink); }
 .sw[aria-checked="true"]::after { transform: translateX(22px); background: var(--bg); }
-.seg { display: inline-flex; flex: 0 0 auto; border: 1px solid var(--ink-2); border-radius: 99px; overflow: hidden; }
-.seg button { border: 0; background: transparent; color: var(--ink); padding: 0 16px; min-height: 40px; font: inherit; font-size: .92rem; }
-.seg button + button { border-left: 1px solid var(--ink-2); }
+.seg { display: inline-flex; flex: 0 0 auto; padding: 3px; gap: 2px; border-radius: var(--r-in); background: color-mix(in srgb, var(--ink) 9%, var(--bg)); }
+.seg button { border: 0; background: transparent; color: var(--ink); padding: 0 16px; min-height: 34px; border-radius: calc(var(--r-in) - 3px); font: inherit; font-size: .92rem; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--ink-on, var(--bg)); font-weight: 600; }
 :root[data-view="readable"] .set-row { min-height: 68px; }
 :root[data-view="readable"] .set-row .s, :root[data-view="readable"] .set-pad .s, :root[data-view="readable"] .set-note { font-size: .95rem; }
-@media (max-width: 400px) { .set-row { flex-wrap: wrap; } .set-row .lab { flex-basis: 60%; } }
+@media (max-width: 400px) { .set-row .lab { flex-basis: 50%; } }
 
-.sheethead h2 { font-size: 1.5rem !important; }
+.sheethead h2 { font-size: 1.5rem !important; font-weight: 700 !important; }
 .sheethead .ibtn { margin-right: calc(var(--s3) * -1); }
 body:has(.lockpanel:not([hidden])) { overflow: hidden; }
 select, .sel { -webkit-appearance: none; appearance: none; background-color: transparent; background-repeat: no-repeat; background-position: right 16px center; background-size: 12px; padding-right: 40px; font-family: var(--f-ui); max-width: 100%;
@@ -222,7 +224,7 @@ input[type="time"]::-webkit-calendar-picker-indicator { margin-inline-start: var
 @media (prefers-reduced-motion: reduce) { .sync[data-state="busy"]::before { animation: none; } }
 dialog.consent { border: 1px solid var(--rule); border-radius: 20px; background: var(--bg); color: var(--ink); padding: var(--s5); max-width: min(26rem, calc(100vw - 2 * var(--s5))); }
 dialog.consent::backdrop { background: rgba(0, 0, 0, .45); }
-dialog.consent h2 { font-family: var(--f-display); font-weight: 500; font-size: 1.5rem; margin: 0 0 var(--s3); }
+dialog.consent h2 { font-family: var(--f-ui); font-weight: 600; font-size: 1.5rem; margin: 0 0 var(--s3); }
 dialog.consent p { margin: 0 0 var(--s5); color: var(--ink-2); }
 dialog.consent .row { display: flex; gap: var(--s3); justify-content: flex-end; flex-wrap: wrap; }
 @media (max-width: 480px) { .foot .info { order: 3; flex-basis: 100%; } }
@@ -234,7 +236,7 @@ dialog.consent .row { display: flex; gap: var(--s3); justify-content: flex-end; 
 .browse { margin-top: var(--s5); padding-top: var(--s5); border-top: 1px solid var(--rule); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s6); }
 .browse > * { min-width: 0; }
 @media (min-width: 760px) { .browse { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .browse .wide { grid-column: 1 / -1; } }
-.browse h2 { margin: 0 0 var(--s3); font-family: var(--f-display); font-weight: 600; font-size: 1.15rem; letter-spacing: .1em; text-transform: uppercase; }
+.browse h2 { margin: 0 0 var(--s3); font-family: var(--f-ui); font-weight: 600; font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); }
 .calhead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--s2); margin-bottom: var(--s2); }
 .calhead select { padding-left: var(--s3); padding-right: 36px; background-position: right 12px center; }
 .calhead .selgrp { display: flex; gap: var(--s2); min-width: 0; flex: 1 1 auto; }
@@ -294,7 +296,7 @@ input[type="search"] { width: 100%; }
 .chip[aria-checked="true"] { background: var(--ink); color: var(--ink-on); border-color: var(--ink); }
 .choices { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s2); }
 .choices > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
-.choice { display: flex; align-items: center; gap: var(--s4); text-align: left; border: 1px solid var(--rule); background: transparent; border-radius: var(--r); padding: var(--s4); min-height: 64px; }
+.choice { display: flex; align-items: center; gap: var(--s4); text-align: left; border: 1px solid var(--rule); background: transparent; border-radius: 26px; padding: var(--s4); min-height: 64px; }
 .choice:hover:not(:disabled) { border-color: var(--ink); }
 .choice:disabled { opacity: .35; }
 .choice .ic { flex: 0 0 22px; }
@@ -440,12 +442,12 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     <div class="section">
       <h3 class="step">2 &nbsp; Save as</h3>
       <div class="choices">
-        <button class="choice" id="expPrint" type="button"><svg class="ic"><use href="#i-book"/></svg><span><b>PDF to print</b><small id="printHow">Print both sides, fold in half, and it reads like a book</small></span></button>
+        <button class="choice" id="expPrint" type="button"><svg class="ic"><use href="#i-book"/></svg><span><b>PDF to print</b><small id="printHow">Print both sides, then fold</small></span></button>
         <select id="printMode" aria-label="How you will print it">
           <option value="book">Fold into a book (print both sides)</option>
           <option value="sheets">Loose pages (print one side, cut in half)</option>
         </select>
-        <button class="choice" id="expTxt" type="button"><svg class="ic"><use href="#i-text"/></svg><span><b>Plain text</b><small>Only your words and their dates</small></span></button>
+        <button class="choice" id="expTxt" type="button"><svg class="ic"><use href="#i-text"/></svg><span><b>Plain text</b><small>Only your words and dates</small></span></button>
       </div>
       <p class="msg" id="msg" aria-live="polite"></p>
     </div>
@@ -455,7 +457,7 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     <div class="sheethead"><h2>Settings</h2><button class="ibtn" id="lpClose" type="button" aria-label="Close" title="Close"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="set-title">Look</div>
     <div class="set-group">
-      <div class="set-row"><div class="lab"><span class="t">Reading style</span><span class="s">Easy reading has larger text and labelled buttons</span></div>
+      <div class="set-row"><div class="lab"><span class="t">Reading style</span></div>
         <div class="seg" role="group" aria-label="Reading style"><button type="button" id="vsClassic" aria-pressed="true">Classic</button><button type="button" id="vsEasy" aria-pressed="false">Easy</button></div></div>
     </div>
 
@@ -467,12 +469,12 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
     <div class="set-title">Lock</div>
     <div class="set-group">
       <div id="lpOff" class="set-sub" hidden>
-        <div class="set-row"><div class="lab"><span class="t">Passcode</span><span class="s">Off. Ask for a passcode when Daybook opens</span></div></div>
+        <div class="set-row"><div class="lab"><span class="t">Passcode</span><span class="s">Ask for it when Daybook opens</span></div></div>
         <div class="set-pad">
           <input type="password" id="setPin" autocomplete="off" placeholder="Passcode, 4 or more characters" aria-label="New passcode">
           <input type="password" id="setRec" autocomplete="off" placeholder="Recovery word, to reset it" aria-label="Recovery word">
           <button class="btn primary" id="lpOn" type="button">Turn on passcode</button>
-          <span class="s">Keep the passcode and recovery word safe.</span>
+          <span class="s">Keep both safe. The word resets it.</span>
         </div>
       </div>
       <div id="lpOnBox" class="set-sub" hidden>
@@ -483,42 +485,43 @@ input[type="time"] { border: 1px solid var(--rule); background: transparent; bor
             <option value="300">5 minutes away</option><option value="900">15 minutes away</option>
           </select></div>
         <div class="set-row" id="bioRow" hidden><div class="lab"><span class="t">Fingerprint</span></div><button class="sw" id="bioToggle" type="button" role="switch" aria-checked="false" aria-label="Use fingerprint"></button></div>
-        <button class="set-row act" id="lockNow" type="button"><span class="t">Lock now</span></button>
         <div class="set-pad">
           <input type="password" id="offPin" autocomplete="off" placeholder="Current passcode" aria-label="Current passcode">
           <button class="btn" id="lpTurnOff" type="button">Turn off passcode</button>
         </div>
       </div>
-      <div class="set-row" id="privSection" hidden><div class="lab"><span class="t">Hide in recent apps</span><span class="s">Keeps your writing off the app switcher</span></div><button class="sw" id="recToggle" type="button" role="switch" aria-checked="true" aria-label="Hide in recent apps"></button></div>
+      <div class="set-row" id="privSection" hidden><div class="lab"><span class="t">Hide in recent apps</span><span class="s">Blank in the app switcher</span></div><button class="sw" id="recToggle" type="button" role="switch" aria-checked="true" aria-label="Hide in recent apps"></button></div>
     </div>
 
     <div id="remSection" hidden>
       <div class="set-title">Daily reminder</div>
       <div class="set-group">
         <div class="set-row"><div class="lab"><span class="t">Remind me</span><span class="s remstat" id="remStatus" data-on="false">Off</span></div><button class="sw" id="remToggle" type="button" role="switch" aria-checked="false" aria-label="Daily reminder"></button></div>
-        <div class="set-row"><div class="lab"><span class="t">Time</span><span class="s">The notification never shows your writing</span></div><input type="time" id="remTime" value="21:00" aria-label="Reminder time"></div>
+        <div class="set-row"><div class="lab"><span class="t">Time</span><span class="s">Never shows your writing</span></div><input type="time" id="remTime" value="21:00" aria-label="Reminder time"></div>
       </div>
       <p class="set-note" id="remMsg" role="status" aria-live="polite"></p>
     </div>
 
     <div class="set-title">Your data</div>
     <div class="set-group">
-      <button class="set-row act" id="expJson" type="button"><span class="lab"><span class="t">Back up everything</span><span class="s">One file with every entry and photo. Not encrypted, keep it private</span></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
-      <button class="set-row act" id="impBtn" type="button"><span class="lab"><span class="t">Restore a backup</span><span class="s">Adds back anything missing, never overwrites</span></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+      <button class="set-row act" id="expJson" type="button"><span class="lab"><span class="t">Back up everything</span><span class="s">One file with all your entries</span></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
+      <button class="set-row act" id="impBtn" type="button"><span class="lab"><span class="t">Restore a backup</span><span class="s">Adds back anything missing</span></span><span class="chev" aria-hidden="true">&rsaquo;</span></button>
       <input type="file" id="impFile" accept="application/json,.json" hidden>
-      <div class="set-row"><div class="lab"><span class="t">Share app health</span><span class="s">Crashes and speed only. Never your writing</span></div><button class="sw" id="telToggle" type="button" role="switch" aria-checked="true" aria-label="Share anonymous app health"></button></div>
+      <div class="set-row"><div class="lab"><span class="t">Share app health</span><span class="s">Crashes and speed only</span></div><button class="sw" id="telToggle" type="button" role="switch" aria-checked="true" aria-label="Share anonymous app health"></button></div>
     </div>
+    <p class="set-note">Backups are not encrypted. Keep them private.</p>
 
     <div class="set-title" id="supportSec" hidden>Support</div>
     <div class="set-group" id="supportGrp" hidden>
-      <div class="set-row"><div class="lab"><span class="t">Support Daybook</span><span class="s">Free, with no ads. Telling a friend helps too</span><span class="s" id="upiNote"></span></div><a class="btn" id="upiPay" href="#">Support with UPI</a></div>
+      <div class="set-row"><div class="lab"><span class="t">Support Daybook</span><span class="s">Free, no ads</span></div><a class="btn" id="upiPay" href="#">Support with UPI</a></div>
           </div>
 
     <div class="set-title">Delete</div>
     <div class="set-group">
-      <div class="set-row"><div class="lab"><span class="t">Delete account</span><span class="s">Erases every entry and photo. Cannot be undone</span></div><button class="btn danger" id="delOpen" type="button">Delete</button></div>
+      <div class="set-row"><div class="lab"><span class="t">Delete account</span><span class="s">This cannot be undone</span></div><button class="btn danger" id="delOpen" type="button">Delete</button></div>
       <div id="delBox" class="set-pad" hidden>
-        <p class="fine">Back up first if you want a copy. This also deletes your sign-in.</p>
+        <p class="fine">Erases everything, including your sign-in.</p>
+        <p class="fine">Back up first if you want a copy.</p>
         <input type="password" id="delPass" autocomplete="current-password" placeholder="Your password" aria-label="Your password" hidden>
         <p class="fine" id="delGoogle" hidden>You will be asked to confirm with Google.</p>
         <div class="row"><button class="btn danger solid" id="delGo" type="button">Erase everything</button><button class="btn" id="delCancel" type="button">Cancel</button></div>

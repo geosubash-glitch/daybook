@@ -366,7 +366,6 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (!$('#lockPanel').hidden) closePanel(); else if (!$('#exportPanel').hidden) closeExport(); else if (!$('#browse').hidden) closeBrowse();
 });
-$('#lockNow').addEventListener('click', lockNow);
 $('#lpOn').addEventListener('click', async () => {
   if (!navigator.onLine) { $('#lpMsg').textContent = 'Connect to the internet to change settings.'; return; }
   const pin = $('#setPin').value, rec = $('#setRec').value.trim().toLowerCase();
@@ -844,7 +843,7 @@ let qTimer = null;
 $('#q').addEventListener('input', () => { clearTimeout(qTimer); qTimer = setTimeout(renderSearch, 250); });
 ['#range', '#from', '#to'].forEach((s) => $(s).addEventListener('change', renderExport));
 $('#expPrint').addEventListener('click', () => runExport($('#printMode').value === 'sheets' ? 'sheets' : 'print'));
-$('#printMode').addEventListener('change', () => { $('#printHow').textContent = $('#printMode').value === 'sheets' ? 'Two days on each A4 sheet, in plain order' : 'Print both sides, fold in half, and it reads like a book'; });
+$('#printMode').addEventListener('change', () => { $('#printHow').textContent = $('#printMode').value === 'sheets' ? 'Two days on each A4 sheet' : 'Print both sides, then fold'; });
 document.querySelectorAll('#chips .chip').forEach((b) => b.addEventListener('click', () => { $('#range').value = b.dataset.v; renderExport(); }));
 function closeExport() { $('#exportPanel').hidden = true; $('#exportBtn').setAttribute('aria-expanded', 'false'); }
 $('#exClose').addEventListener('click', closeExport);
@@ -900,7 +899,6 @@ boot();
   if (!links.upiId) return;
   $('#supportSec').hidden = false; $('#supportGrp').hidden = false;
   $('#upiPay').href = 'upi://pay?pa=' + encodeURIComponent(links.upiId) + '&pn=' + encodeURIComponent(links.upiName || 'Daybook') + '&cu=INR&tn=' + encodeURIComponent('Support Daybook');
-  $('#upiNote').textContent = 'UPI ID: ' + links.upiId;
 })();
 
 // Easy reading mode: bigger text, darker greys, labelled buttons. Asked once on first open, one tap to change later.
